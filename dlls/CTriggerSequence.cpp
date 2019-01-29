@@ -204,9 +204,9 @@ void CTriggerSequence::Think()
 
 	while( m_nextCommand )
 	{
-		ExecuteSequenceCommand( m_nextCommand );
-
 		timeNext += m_nextCommand->delay;
+
+		ExecuteSequenceCommand( m_nextCommand );
 
 		if( gpGlobals->time < timeNext )
 			break;
