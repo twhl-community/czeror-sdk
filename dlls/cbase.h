@@ -145,6 +145,12 @@ public:
 	// initialization functions
 	virtual void	Spawn( void ) { return; }
 	virtual void	Precache( void ) { return; }
+
+	/**
+	*	@brief Restart the entity for a new round
+	*/
+	virtual void Restart() {}
+
 	virtual void	KeyValue( KeyValueData* pkvd) { pkvd->fHandled = FALSE; }
 	virtual int		Save( CSave &save );
 	virtual int		Restore( CRestore &restore );
@@ -196,7 +202,7 @@ public:
 	virtual BOOL	IsNetClient( void ) { return FALSE; }
 	virtual const char *TeamID( void ) { return ""; }
 
-
+	virtual void PreKillTarget() {}
 //	virtual void	SetActivator( CBaseEntity *pActivator ) {}
 	virtual CBaseEntity *GetNextTarget( void );
 	
