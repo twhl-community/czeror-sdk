@@ -349,7 +349,7 @@ void CTriggerSequence::ExecuteSoundOrSpeech( char* soundName, char* speakerName,
 	if( soundName )
 	{
 		if( speakerName && strcmp( "none", speakerName ) )
-			CTriggerSequence::ExecuteSpeech( soundName, speakerName, listenerName, duration );
+			ExecuteSpeech( soundName, speakerName, listenerName, duration );
 		else
 			ExecuteSound( soundName );
 	}
