@@ -722,6 +722,7 @@ void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax )
 		if ( pClass && !(pClass->pev->flags & FL_DORMANT) )
 		{
 			pClass->Activate();
+			pClass->Restart();
 		}
 		else
 		{
