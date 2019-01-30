@@ -465,6 +465,7 @@ extern int gcallsentences;
 int USENTENCEG_Pick(int isentenceg, char *szfound);
 int USENTENCEG_PickSequential(int isentenceg, char *szfound, int ipick, int freset);
 void USENTENCEG_InitLRU(unsigned char *plru, int count);
+int USEQUENCE_SENTENCEG_Pick( const char* szgroupname, char* szfound );
 
 void SENTENCEG_Init();
 void SENTENCEG_Stop(edict_t *entity, int isentenceg, int ipick);
