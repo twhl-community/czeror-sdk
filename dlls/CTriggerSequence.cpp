@@ -29,7 +29,7 @@ public:
 
 	CTriggerSequence();
 
-	int ObjectCaps() override { return CLASS_NONE; }
+	int ObjectCaps() override { return CBaseDelay::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
 	void KeyValue( KeyValueData* pkvd ) override;
 	void Precache() override;
