@@ -42,6 +42,14 @@
 #include <cstdlib>
 #include <cstring>
 
+using byte = unsigned char;
+using word = unsigned short;
+using func_t = unsigned int;
+using string_t = unsigned int;
+using qboolean = int;
+
+#define ARRAYSIZE(p)		(sizeof(p)/sizeof(p[0]))
+
 // Prevent tons of unused windows definitions
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -49,6 +57,7 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+#define NOMINMAX
 #include "winsani_in.h"
 #include <Windows.h>
 #include "winsani_out.h"
@@ -71,10 +80,18 @@ typedef int BOOL;
 #include <stdarg.h>
 #define _vsnprintf(a,b,c,d) vsnprintf(a,b,c,d)
 
+#define stricmp strcasecmp
+#define _strnicmp strncasecmp
+#define strnicmp strncasecmp
+#define _snprintf snprintf
+#define _alloca alloca
+
 #define DLLEXPORT __attribute__ ( ( visibility( "default" ) ) )
 #endif //_WIN32
 
 #define V_min(a,b)  (((a) < (b)) ? (a) : (b))
 #define V_max(a,b)  (((a) > (b)) ? (a) : (b))
+
+#define clamp( val, min, max ) ( ((val) > (max)) ? (max) : ( ((val) < (min)) ? (min) : (val) ) )
 
 #endif //PLATFORM_H

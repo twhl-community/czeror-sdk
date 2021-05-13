@@ -47,6 +47,7 @@ cvar_t  mp_chattime = {"mp_chattime","10", FCVAR_SERVER };
 cvar_t 	*g_psv_gravity = NULL;
 cvar_t	*g_psv_aim = NULL;
 cvar_t	*g_footsteps = NULL;
+cvar_t* g_psv_cheats = nullptr;
 
 //CVARS FOR SKILL LEVEL SETTINGS
 // Agrunt
@@ -364,6 +365,11 @@ cvar_t	sk_plr_tripmine1 = {"sk_plr_tripmine1","0"};
 cvar_t	sk_plr_tripmine2 = {"sk_plr_tripmine2","0"};
 cvar_t	sk_plr_tripmine3 = {"sk_plr_tripmine3","0"};
 
+// HORNET
+cvar_t	sk_plr_hornet_dmg1 = {"sk_plr_hornet_dmg1","0"};
+cvar_t	sk_plr_hornet_dmg2 = {"sk_plr_hornet_dmg2","0"};
+cvar_t	sk_plr_hornet_dmg3 = {"sk_plr_hornet_dmg3","0"};
+
 
 // WORLD WEAPONS
 cvar_t	sk_12mm_bullet1 = {"sk_12mm_bullet1","0"};
@@ -452,13 +458,14 @@ cvar_t	sk_player_leg3	= { "sk_player_leg3","1" };
 
 // Register your console variables here
 // This gets called one time when the game is initialied
-void GameDLLInit( void )
+void GameDLLInit()
 {
 	// Register cvars here:
 
 	g_psv_gravity = CVAR_GET_POINTER( "sv_gravity" );
 	g_psv_aim = CVAR_GET_POINTER( "sv_aim" );
 	g_footsteps = CVAR_GET_POINTER( "mp_footsteps" );
+	g_psv_cheats = CVAR_GET_POINTER("sv_cheats");
 
 	CVAR_REGISTER (&displaysoundlist);
 	CVAR_REGISTER( &allow_spectators );
@@ -800,6 +807,11 @@ void GameDLLInit( void )
 	CVAR_REGISTER ( &sk_plr_tripmine1 );// {"sk_plr_tripmine1","0"};
 	CVAR_REGISTER ( &sk_plr_tripmine2 );// {"sk_plr_tripmine2","0"};
 	CVAR_REGISTER ( &sk_plr_tripmine3 );// {"sk_plr_tripmine3","0"};
+
+	// HORNET
+	CVAR_REGISTER(&sk_plr_hornet_dmg1);// {"sk_plr_hornet_dmg1","0"};
+	CVAR_REGISTER(&sk_plr_hornet_dmg2);// {"sk_plr_hornet_dmg2","0"};
+	CVAR_REGISTER(&sk_plr_hornet_dmg3);// {"sk_plr_hornet_dmg3","0"};
 
 
 	// WORLD WEAPONS

@@ -21,23 +21,11 @@
 #include "nodes.h"
 #include "player.h"
 #include "gamerules.h"
+#include "UserMessages.h"
 
 // special deathmatch shotgun spreads
 #define VECTOR_CONE_DM_SHOTGUN	Vector( 0.08716, 0.04362, 0.00  )// 10 degrees by 5 degrees
 #define VECTOR_CONE_DM_DOUBLESHOTGUN Vector( 0.17365, 0.04362, 0.00 ) // 20 degrees by 5 degrees
-
-enum shotgun_e {
-	SHOTGUN_IDLE = 0,
-	SHOTGUN_FIRE,
-	SHOTGUN_FIRE2,
-	SHOTGUN_RELOAD,
-	SHOTGUN_PUMP,
-	SHOTGUN_START_RELOAD,
-	SHOTGUN_DRAW,
-	SHOTGUN_HOLSTER,
-	SHOTGUN_IDLE4,
-	SHOTGUN_IDLE_DEEP
-};
 
 LINK_ENTITY_TO_CLASS( weapon_shotgun, CShotgun );
 
@@ -53,7 +41,7 @@ void CShotgun::Spawn( )
 }
 
 
-void CShotgun::Precache( void )
+void CShotgun::Precache()
 {
 	PRECACHE_MODEL("models/v_shotgun.mdl");
 	PRECACHE_MODEL("models/w_shotgun.mdl");
@@ -175,7 +163,7 @@ void CShotgun::PrimaryAttack()
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	if (m_iClip != 0)
+	//if (m_iClip != 0)
 		m_flPumpTime = gpGlobals->time + 0.5;
 
 	m_flNextPrimaryAttack = GetNextAttackDelay(0.75);
@@ -188,7 +176,7 @@ void CShotgun::PrimaryAttack()
 }
 
 
-void CShotgun::SecondaryAttack( void )
+void CShotgun::SecondaryAttack()
 {
 	// don't fire underwater
 	if (m_pPlayer->pev->waterlevel == 3)
@@ -249,7 +237,7 @@ void CShotgun::SecondaryAttack( void )
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	if (m_iClip != 0)
+	//if (m_iClip != 0)
 		m_flPumpTime = gpGlobals->time + 0.95;
 
 	m_flNextPrimaryAttack = GetNextAttackDelay(1.5);
@@ -264,7 +252,7 @@ void CShotgun::SecondaryAttack( void )
 }
 
 
-void CShotgun::Reload( void )
+void CShotgun::Reload()
 {
 	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 || m_iClip == SHOTGUN_MAX_CLIP)
 		return;
@@ -311,18 +299,21 @@ void CShotgun::Reload( void )
 }
 
 
-void CShotgun::WeaponIdle( void )
+void CShotgun::WeaponIdle()
 {
 	ResetEmptySound( );
 
 	m_pPlayer->GetAutoaimVector( AUTOAIM_5DEGREES );
 
+	//Moved to ItemPostFrame
+	/*
 	if ( m_flPumpTime && m_flPumpTime < gpGlobals->time )
 	{
 		// play pumping sound
 		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0,0x1f));
 		m_flPumpTime = 0;
 	}
+	*/
 
 	if (m_flTimeWeaponIdle <  UTIL_WeaponTimeBase() )
 	{
@@ -371,22 +362,33 @@ void CShotgun::WeaponIdle( void )
 	}
 }
 
+void CShotgun::ItemPostFrame()
+{
+	if (m_flPumpTime && m_flPumpTime < gpGlobals->time)
+	{
+		// play pumping sound
+		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 0x1f));
+		m_flPumpTime = 0;
+	}
+
+	CBasePlayerWeapon::ItemPostFrame();
+}
 
 
 class CShotgunAmmo : public CBasePlayerAmmo
 {
-	void Spawn( void )
+	void Spawn() override
 	{ 
 		Precache( );
 		SET_MODEL(ENT(pev), "models/w_shotbox.mdl");
 		CBasePlayerAmmo::Spawn( );
 	}
-	void Precache( void )
+	void Precache() override
 	{
 		PRECACHE_MODEL ("models/w_shotbox.mdl");
 		PRECACHE_SOUND("items/9mmclip1.wav");
 	}
-	BOOL AddAmmo( CBaseEntity *pOther ) 
+	BOOL AddAmmo( CBaseEntity *pOther ) override
 	{ 
 		if (pOther->GiveAmmo( AMMO_BUCKSHOTBOX_GIVE, "buckshot", BUCKSHOT_MAX_CARRY ) != -1)
 		{

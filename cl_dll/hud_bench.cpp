@@ -28,10 +28,6 @@
 
 #include "entity_types.h"
 
-#ifndef M_PI
-#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
-#endif
-
 #define NUM_BENCH_OBJ 12
 #define BENCH_CYCLE_TIME 10.0
 #define BENCH_INNER_CYCLE_TIME 4.0
@@ -74,7 +70,7 @@ const char *g_stage3[2] =
 };
 const char *g_stage4 = "  Composite Score:  %i";
 
-extern vec3_t v_origin;
+extern Vector v_origin;
 
 static int g_isPowerPlay = 0;
 static int g_currentstage = 0;
@@ -93,12 +89,12 @@ void Bench_SetStage( int stage )
 	g_currentstage = stage;
 }
 
-int Bench_GetStage( void )
+int Bench_GetStage()
 {
 	return g_currentstage;
 }
 
-float Bench_GetSwitchTime( void )
+float Bench_GetSwitchTime()
 {
 	return g_benchSwitchTimes[ V_min( Bench_GetStage(), LAST_STAGE ) ];
 }
@@ -113,23 +109,23 @@ void Bench_SetPowerPlay( int set )
 	g_isPowerPlay = set ? 1 : 0;
 }
 
-int Bench_GetPowerPlay( void )
+int Bench_GetPowerPlay()
 {
 	return g_isPowerPlay;
 }
 
-int Bench_Active( void )
+int Bench_Active()
 {
 	return g_currentstage != 0 ? 1 : 0;
 }
 
-void __CmdFunc_BenchMark( void )
+void __CmdFunc_BenchMark()
 {
 	gHUD.m_Benchmark.Restart();
 }
 
 
-void CHudBenchmark::Restart( void )
+void CHudBenchmark::Restart()
 {
 	Bench_SetStage( FIRST_STAGE );
 	g_benchSwitchTime = gHUD.m_flTime + g_benchSwitchTimes[ FIRST_STAGE ];
@@ -229,7 +225,7 @@ void CHudBenchmark::CountFrame( float dt )
 
 static int started = 0;
 
-void Bench_CheckStart( void )
+void Bench_CheckStart()
 {
 	const char *level;
 	if ( !started && !Bench_Active() )
@@ -243,7 +239,7 @@ void Bench_CheckStart( void )
 	}
 }
 
-void CHudBenchmark::Think( void )
+void CHudBenchmark::Think()
 {
 	if ( !Bench_Active() )
 		return;
@@ -395,7 +391,7 @@ void CHudBenchmark::Think( void )
 }
 
 
-int CHudBenchmark::Init( void )
+int CHudBenchmark::Init()
 {
 	gHUD.AddHudElem( this );
 
@@ -406,7 +402,7 @@ int CHudBenchmark::Init( void )
 	return 1;
 }
 
-int CHudBenchmark::VidInit( void )
+int CHudBenchmark::VidInit()
 {
 	return 1;
 }
@@ -457,7 +453,7 @@ int CHudBenchmark::Bench_ScoreForValue( int stage, float raw )
 	return score;
 }
 
-void CHudBenchmark::SetCompositeScore( void )
+void CHudBenchmark::SetCompositeScore()
 {
 	int	tracking_score	= Bench_ScoreForValue( THIRD_STAGE, m_fAvgScore );
 	int ping_score		= Bench_ScoreForValue( FIRST_STAGE, m_StoredLatency );
@@ -506,7 +502,7 @@ int CHudBenchmark::Draw( float flTime )
 		}
 		else
 		{
-			sprintf( sz, g_stage1[0] );
+			sprintf( sz, "%s", g_stage1[0] );
 		}
 		gHUD.DrawHudString( x, y, 320, sz, 255, 255, 255 );
 
@@ -531,7 +527,7 @@ int CHudBenchmark::Draw( float flTime )
 		}
 		else
 		{
-			sprintf( sz, g_stage2[0] );
+			sprintf( sz, "%s", g_stage2[0] );
 		}
 		gHUD.DrawHudString( x, y, 320, sz, 255, 255, 255 );
 		y += 20;
@@ -546,7 +542,7 @@ int CHudBenchmark::Draw( float flTime )
 		}
 		else
 		{
-			sprintf( sz, g_stage3[0] );
+			sprintf( sz, "%s", g_stage3[0] );
 		}
 
 		gHUD.DrawHudString( x, y, 320, sz, 255, 255, 255 );
@@ -584,15 +580,15 @@ void Bench_SetDotAdded( int dot )
 	g_renderedBenchmarkDot = dot;
 }
 
-int Bench_GetDotAdded( void )
+int Bench_GetDotAdded()
 {
 	return g_renderedBenchmarkDot;
 }
 
-void Bench_SpotPosition( vec3_t dot, vec3_t target )
+void Bench_SpotPosition(Vector dot, Vector target )
 {
 	// Compute new score
-	vec3_t delta;
+	Vector delta;
 
 	VectorSubtract( target, dot, delta );
 
@@ -613,11 +609,11 @@ typedef struct model_s
 //
 // volume occupied by the model
 //		
-	vec3_t		mins, maxs;
+	Vector		mins, maxs;
 } model_t;
 
-static vec3_t g_dotorg;
-vec3_t g_aimorg;
+static Vector g_dotorg;
+Vector g_aimorg;
 float g_fZAdjust = 0.0;
 
 void Bench_CheckEntity( int type, struct cl_entity_s *ent, const char *modelname )
@@ -625,7 +621,7 @@ void Bench_CheckEntity( int type, struct cl_entity_s *ent, const char *modelname
 	if ( Bench_InStage( THIRD_STAGE ) && !stricmp( modelname, "*3" ) )
 	{
 		model_t *pmod;
-		vec3_t v;
+		Vector v;
 		pmod = (model_t *)( ent->model );
 
 		VectorAdd( pmod->mins, pmod->maxs, v );
@@ -664,8 +660,8 @@ void Bench_CheckEntity( int type, struct cl_entity_s *ent, const char *modelname
 	}
 }
 
-
-void NormalizeVector( vec3_t v )
+//TODO: since vec3_t was aliased to Vector this does nothing (vec3_t decays to pointer, Vector does not)
+void NormalizeVector(Vector v )
 {
 	int i;
 	for ( i = 0; i < 3; i++ )
@@ -683,16 +679,16 @@ void NormalizeVector( vec3_t v )
 }
 
 float g_flStartTime;
-int HUD_SetupBenchObjects( cl_entity_t *bench, int plindex, vec3_t origin )
+int HUD_SetupBenchObjects( cl_entity_t *bench, int plindex, Vector origin )
 {
 	int i, j;
-	vec3_t ang;
+	Vector ang;
 	float offset;
 	struct model_s *mdl;
 	int index;
-	vec3_t forward, right, up;
-	vec3_t farpoint;
-	vec3_t centerspot;
+	Vector forward, right, up;
+	Vector farpoint;
+	Vector centerspot;
 	pmtrace_t tr;
 	
 	ang = vec3_origin;
@@ -791,13 +787,13 @@ int HUD_SetupBenchObjects( cl_entity_t *bench, int plindex, vec3_t origin )
 	return 1;
 }
 
-void HUD_CreateBenchObjects( vec3_t origin )
+void HUD_CreateBenchObjects(Vector origin )
 {
 	static cl_entity_t bench[ NUM_BENCH_OBJ ];
 	cl_entity_t *player;
-	vec3_t forward, right, up;
-	vec3_t farpoint;
-	vec3_t centerspot;
+	Vector forward, right, up;
+	Vector farpoint;
+	Vector centerspot;
 	static int first = true;
 	static int failed = false;
 	static float last_time;
@@ -887,7 +883,7 @@ void HUD_CreateBenchObjects( vec3_t origin )
 		float offset;
 		float ofs_radius = 5.0;
 
-		vec3_t ang;
+		Vector ang;
 		offset = ( float ) i / (float) ( NUM_BENCH_OBJ - 1 );
 
 		ang[ 0 ] = 0;
@@ -921,7 +917,7 @@ void HUD_CreateBenchObjects( vec3_t origin )
 		{
 			float damp;
 			float proj;
-			vec3_t traceNormal;
+			Vector traceNormal;
 			int j;
 
 			traceNormal = tr.plane.normal;
@@ -1004,7 +1000,7 @@ void HUD_CreateBenchObjects( vec3_t origin )
 	gEngfuncs.pEventAPI->EV_PopPMStates();
 }
 
-void Bench_AddObjects( void )
+void Bench_AddObjects()
 {
 	if ( Bench_GetDotAdded() )
 	{
@@ -1019,7 +1015,7 @@ void Bench_AddObjects( void )
 }
 
 
-static vec3_t v_stochastic;
+static Vector v_stochastic;
 
 void Bench_SetViewAngles( int recalc_wander, float *viewangles, float frametime, struct usercmd_s *cmd )
 {
@@ -1027,7 +1023,7 @@ void Bench_SetViewAngles( int recalc_wander, float *viewangles, float frametime,
 		return;
 
 	int i;
-	vec3_t lookdir;
+	Vector lookdir;
 
 	// Clear stochastic offset between runs
 	if ( Bench_InStage( FIRST_STAGE ) )
@@ -1102,8 +1098,8 @@ void Bench_SetViewOrigin( float *vieworigin, float frametime )
 	float frac;
 	float offset_amt = BENCH_BALL_VIEWDRIFT;
 	float drift;
-	vec3_t ang, right;
-	vec3_t move;
+	Vector ang, right;
+	Vector move;
 
 	if ( !Bench_InStage( SECOND_STAGE ) )
 		return;

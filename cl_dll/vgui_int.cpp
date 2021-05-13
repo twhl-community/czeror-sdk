@@ -23,7 +23,6 @@
 #include "camera.h"
 #include "in_defs.h"
 #include "vgui_TeamFortressViewport.h"
-#include "vgui_ControlConfigPanel.h"
 
 namespace
 {
@@ -42,19 +41,19 @@ public:
 		_textEntry->addActionSignal(this);
 	}
 public:
-	virtual bool isWithin(int x,int y)
+	bool isWithin(int x,int y) override
 	{
 		return _textEntry->isWithin(x,y);
 	}
 public:
-	virtual void actionPerformed(Panel* panel)
+	void actionPerformed(Panel* panel) override
 	{
 		char buf[256];
 		_textEntry->getText(0,buf,256);
 		sscanf(buf,"%d",&_bindIndex);
 	}
 protected:
-	virtual void paintBackground()
+	void paintBackground() override
 	{
 			Panel::paintBackground();
 			

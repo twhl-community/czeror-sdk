@@ -51,7 +51,6 @@
 
 #include "vgui_int.h"
 #include "vgui_TeamFortressViewport.h"
-#include "vgui_ServerBrowser.h"
 #include "vgui_ScorePanel.h"
 #include "vgui_SpectatorPanel.h"
 
@@ -77,7 +76,7 @@ int g_iUser3 = 0;
 #define SBOARD_INDENT_X_400		0
 #define SBOARD_INDENT_Y_400		20
 
-void IN_ResetMouse( void );
+void IN_ResetMouse();
 extern CMenuPanel *CMessageWindowPanel_Create( const char *szMOTD, const char *szTitle, int iShadeFullscreen, int iRemoveMe, int x, int y, int wide, int tall );
 extern float * GetClientColor( int clientIndex );
 
@@ -96,7 +95,7 @@ int iTeamColors[5][3] =
 
 
 // Used for Class specific buttons
-char *sTFClasses[] =
+const char *sTFClasses[] =
 {
 	"",
 	"SCOUT",
@@ -111,7 +110,7 @@ char *sTFClasses[] =
 	"CIVILIAN",
 };
 
-char *sLocalisedClasses[] = 
+const char *sLocalisedClasses[] = 
 {
 	"#Civilian",
 	"#Scout",
@@ -127,7 +126,7 @@ char *sLocalisedClasses[] =
 	"#Civilian",
 };
 
-char *sTFClassSelection[] = 
+const char *sTFClassSelection[] = 
 {
 	"civilian",
 	"scout",
@@ -214,7 +213,7 @@ void CCommandMenu::AddButton( CommandButton *pButton )
 	}
 }
 
-void CCommandMenu::RemoveAllButtons(void)
+void CCommandMenu::RemoveAllButtons()
 {
 	/*
 	for(int i=0;i<m_iButtons;i++)
@@ -274,7 +273,7 @@ bool CCommandMenu::KeyInput( int keyNum )
 // Purpose: clears the current menus buttons of any armed (highlighted) 
 //			state, and all their sub buttons
 //-----------------------------------------------------------------------------
-void CCommandMenu::ClearButtonsOfArmedState( void )
+void CCommandMenu::ClearButtonsOfArmedState()
 {
 	for ( int i = 0; i < GetNumButtons(); i++ )
 	{
@@ -512,10 +511,10 @@ public:
 	{
 	}
 
-	virtual void cursorMoved(int x,int y,Panel* panel) {}
-	virtual void cursorEntered(Panel* panel) {}
-	virtual void cursorExited(Panel* panel) {}
-	virtual void mousePressed(MouseCode code,Panel* panel) 
+	void cursorMoved(int x,int y,Panel* panel) override {}
+	void cursorEntered(Panel* panel) override {}
+	void cursorExited(Panel* panel) override {}
+	void mousePressed(MouseCode code,Panel* panel)  override
 	{
 		if ( code != MOUSE_LEFT )
 		{
@@ -524,16 +523,16 @@ public:
 			gEngfuncs.pfnClientCmd( "ForceCloseCommandMenu\n" );
 		}
 	}
-	virtual void mouseReleased(MouseCode code,Panel* panel)
+	void mouseReleased(MouseCode code,Panel* panel) override
 	{
 	}
 
-	virtual void mouseDoublePressed(MouseCode code,Panel* panel) {}
-	virtual void mouseWheeled(int delta,Panel* panel) {}
-	virtual void keyPressed(KeyCode code,Panel* panel) {}
-	virtual void keyTyped(KeyCode code,Panel* panel) {}
-	virtual void keyReleased(KeyCode code,Panel* panel) {}
-	virtual void keyFocusTicked(Panel* panel) {}
+	void mouseDoublePressed(MouseCode code,Panel* panel) override {}
+	void mouseWheeled(int delta,Panel* panel) override {}
+	void keyPressed(KeyCode code,Panel* panel) override {}
+	void keyTyped(KeyCode code,Panel* panel) override {}
+	void keyReleased(KeyCode code,Panel* panel) override {}
+	void keyFocusTicked(Panel* panel) override {}
 };
 
 
@@ -627,16 +626,12 @@ TeamFortressViewport::TeamFortressViewport(int x,int y,int wide,int tall) : Pane
 	m_pCommandMenus[m_PlayerMenu]->m_iSpectCmdMenu = 1;
 
 	UpdatePlayerMenu(m_PlayerMenu);
-
-	CreateServerBrowser();
-
-
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Called everytime a new level is started. Viewport clears out it's data.
 //-----------------------------------------------------------------------------
-void TeamFortressViewport::Initialize( void )
+void TeamFortressViewport::Initialize()
 {
 	// Force each menu to Initialize
 	if (m_pTeamMenu)
@@ -688,7 +683,7 @@ class CException;
 // Purpose: Read the Command Menu structure from the txt file and create the menu.
 //			Returns Index of menu in m_pCommandMenus
 //-----------------------------------------------------------------------------
-int TeamFortressViewport::CreateCommandMenu( char * menuFile, int direction, int yOffset, bool flatDesign, float flButtonSizeX, float flButtonSizeY, int xOffset )
+int TeamFortressViewport::CreateCommandMenu( const char * menuFile, int direction, int yOffset, bool flatDesign, float flButtonSizeX, float flButtonSizeY, int xOffset )
 {
 	// COMMAND MENU
 	// Create the root of this new Command Menu
@@ -1276,26 +1271,6 @@ CommandButton *TeamFortressViewport::CreateCustomButton( char *pButtonText, char
 	return pButton;
 }
 
-void TeamFortressViewport::ToggleServerBrowser()
-{
-	if (!m_iInitialized)
-		return;
-
-	if ( !m_pServerBrowser )
-		return;
-
-	if ( m_pServerBrowser->isVisible() )
-	{
-		m_pServerBrowser->setVisible( false );
-	}
-	else
-	{
-		m_pServerBrowser->setVisible( true );
-	}
-
-	UpdateCursorState();
-}
-
 //=======================================================================
 void TeamFortressViewport::ShowCommandMenu(int menuIndex)
 {
@@ -1393,7 +1368,7 @@ void TeamFortressViewport::HideCommandMenu()
 //-----------------------------------------------------------------------------
 // Purpose: Bring up the scoreboard
 //-----------------------------------------------------------------------------
-void TeamFortressViewport::ShowScoreBoard( void )
+void TeamFortressViewport::ShowScoreBoard()
 {
 	if (m_pScoreBoard)
 	{
@@ -1409,7 +1384,7 @@ void TeamFortressViewport::ShowScoreBoard( void )
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if the scoreboard is up
 //-----------------------------------------------------------------------------
-bool TeamFortressViewport::IsScoreBoardVisible( void )
+bool TeamFortressViewport::IsScoreBoardVisible()
 {
 	if (m_pScoreBoard)
 		return m_pScoreBoard->isVisible();
@@ -1420,7 +1395,7 @@ bool TeamFortressViewport::IsScoreBoardVisible( void )
 //-----------------------------------------------------------------------------
 // Purpose: Hide the scoreboard
 //-----------------------------------------------------------------------------
-void TeamFortressViewport::HideScoreBoard( void )
+void TeamFortressViewport::HideScoreBoard()
 {
 	// Prevent removal of scoreboard during intermission
 	if ( gHUD.m_iIntermission )
@@ -1440,7 +1415,7 @@ void TeamFortressViewport::HideScoreBoard( void )
 // Purpose: Activate's the player special ability
 //			called when the player hits their "special" key
 //-----------------------------------------------------------------------------
-void TeamFortressViewport::InputPlayerSpecial( void )
+void TeamFortressViewport::InputPlayerSpecial()
 {
 	if (!m_iInitialized)
 		return;
@@ -1674,7 +1649,7 @@ void TeamFortressViewport::UpdateSpectatorPanel()
 }
 
 //======================================================================
-void TeamFortressViewport::CreateScoreBoard( void )
+void TeamFortressViewport::CreateScoreBoard()
 {
 	int xdent = SBOARD_INDENT_X, ydent = SBOARD_INDENT_Y;
 	if (ScreenWidth == 512)
@@ -1692,14 +1667,6 @@ void TeamFortressViewport::CreateScoreBoard( void )
 	m_pScoreBoard->setParent(this);
 	m_pScoreBoard->setVisible(false);
 }
-
-void TeamFortressViewport::CreateServerBrowser( void )
-{
-	m_pServerBrowser = new ServerBrowser( 0, 0, ScreenWidth, ScreenHeight );
-	m_pServerBrowser->setParent(this);
-	m_pServerBrowser->setVisible(false);
-}
-
 
 //======================================================================
 // Set the VGUI Menu
@@ -1969,7 +1936,7 @@ void TeamFortressViewport::HideTopMenu()
 }
 
 // Return TRUE if the HUD's allowed to print text messages
-bool TeamFortressViewport::AllowedToPrintText( void )
+bool TeamFortressViewport::AllowedToPrintText()
 {
 	// Prevent text messages when fullscreen menus are up
 	if ( m_pCurrentMenu && g_iPlayerClass == 0 )
@@ -2058,7 +2025,7 @@ void TeamFortressViewport::UpdateOnPlayerInfo()
 void TeamFortressViewport::UpdateCursorState()
 {
 	// Need cursor if any VGUI window is up
-	if ( m_pSpectatorPanel->m_menuVisible || m_pCurrentMenu || m_pTeamMenu->isVisible() || m_pServerBrowser->isVisible() || GetClientVoiceMgr()->IsInSquelchMode() )
+	if ( m_pSpectatorPanel->m_menuVisible || m_pCurrentMenu || m_pTeamMenu->isVisible() || GetClientVoiceMgr()->IsInSquelchMode() )
 	{
 		g_iVisibleMouse = true;
 		App::getInstance()->setCursorOveride( App::getInstance()->getScheme()->getCursor(Scheme::scu_arrow) );
@@ -2091,7 +2058,7 @@ void TeamFortressViewport::UpdateHighlights()
 		m_pCurrentCommandMenu->MakeVisible( NULL );
 }
 
-void TeamFortressViewport::GetAllPlayersInfo( void )
+void TeamFortressViewport::GetAllPlayersInfo()
 {
 	for ( int i = 1; i < MAX_PLAYERS; i++ )
 	{

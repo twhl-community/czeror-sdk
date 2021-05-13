@@ -27,7 +27,7 @@
 #include "event_api.h"
 #include "r_efx.h"
 
-#include "../hud_iface.h"
+#include "cl_dll.h"
 #include "../com_weapons.h"
 #include "../demo.h"
 
@@ -49,7 +49,7 @@ static CBasePlayerWeapon *g_pWpns[ 32 ];
 float g_flApplyVel = 0.0;
 int   g_irunninggausspred = 0;
 
-vec3_t previousorigin;
+Vector previousorigin;
 
 // HLDM Weapon placeholder entities.
 CGlock g_Glock;
@@ -75,7 +75,7 @@ AlertMessage
 Print debug messages to console
 ======================
 */
-void AlertMessage( ALERT_TYPE atype, char *szFmt, ... )
+void AlertMessage( ALERT_TYPE atype, const char *szFmt, ... )
 {
 	va_list		argptr;
 	static char	string[1024];
@@ -90,12 +90,12 @@ void AlertMessage( ALERT_TYPE atype, char *szFmt, ... )
 
 //Returns if it's multiplayer.
 //Mostly used by the client side weapons.
-bool bIsMultiplayer ( void )
+bool bIsMultiplayer ()
 {
 	return gEngfuncs.GetMaxClients() == 1 ? 0 : 1;
 }
 //Just loads a v_ model.
-void LoadVModel ( char *szViewModel, CBasePlayer *m_pPlayer )
+void LoadVModel ( const char *szViewModel, CBasePlayer *m_pPlayer )
 {
 	gEngfuncs.CL_LoadModel( szViewModel, &m_pPlayer->pev->viewmodel );
 }
@@ -119,10 +119,24 @@ void HUD_PrepEntity( CBaseEntity *pEntity, CBasePlayer *pWeaponOwner )
 	if ( pWeaponOwner )
 	{
 		ItemInfo info;
+
+		memset(&info, 0, sizeof(info));
 		
 		((CBasePlayerWeapon *)pEntity)->m_pPlayer = pWeaponOwner;
 		
 		((CBasePlayerWeapon *)pEntity)->GetItemInfo( &info );
+
+		CBasePlayerItem::ItemInfoArray[info.iId] = info;
+
+		if (info.pszAmmo1 && *info.pszAmmo1)
+		{
+			AddAmmoNameToAmmoRegistry(info.pszAmmo1);
+		}
+
+		if (info.pszAmmo2 && *info.pszAmmo2)
+		{
+			AddAmmoNameToAmmoRegistry(info.pszAmmo2);
+		}
 
 		g_pWpns[ info.iId ] = (CBasePlayerWeapon *)pEntity;
 	}
@@ -142,73 +156,11 @@ void CBaseEntity :: Killed( entvars_t *pevAttacker, int iGib )
 
 /*
 =====================
-CBasePlayerWeapon :: DefaultReload
-=====================
-*/
-BOOL CBasePlayerWeapon :: DefaultReload( int iClipSize, int iAnim, float fDelay, int body )
-{
-
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		return FALSE;
-
-	int j = V_min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
-
-	if (j == 0)
-		return FALSE;
-
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
-
-	//!!UNDONE -- reload sound goes here !!!
-	SendWeaponAnim( iAnim, UseDecrement(), body );
-
-	m_fInReload = TRUE;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
-	return TRUE;
-}
-
-/*
-=====================
-CBasePlayerWeapon :: CanDeploy
-=====================
-*/
-BOOL CBasePlayerWeapon :: CanDeploy( void ) 
-{
-	BOOL bHasAmmo = 0;
-
-	if ( !pszAmmo1() )
-	{
-		// this weapon doesn't use ammo, can always deploy.
-		return TRUE;
-	}
-
-	if ( pszAmmo1() )
-	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] != 0);
-	}
-	if ( pszAmmo2() )
-	{
-		bHasAmmo |= (m_pPlayer->m_rgAmmo[m_iSecondaryAmmoType] != 0);
-	}
-	if (m_iClip > 0)
-	{
-		bHasAmmo |= 1;
-	}
-	if (!bHasAmmo)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-/*
-=====================
 CBasePlayerWeapon :: DefaultDeploy
 
 =====================
 */
-BOOL CBasePlayerWeapon :: DefaultDeploy( char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int skiplocal, int	body )
+BOOL CBasePlayerWeapon :: DefaultDeploy(const char *szViewModel, const char *szWeaponModel, int iAnim, const char *szAnimExt, int skiplocal, int	body )
 {
 	if ( !CanDeploy() )
 		return FALSE;
@@ -229,7 +181,7 @@ CBasePlayerWeapon :: PlayEmptySound
 
 =====================
 */
-BOOL CBasePlayerWeapon :: PlayEmptySound( void )
+BOOL CBasePlayerWeapon :: PlayEmptySound()
 {
 	if (m_iPlayEmptySound)
 	{
@@ -238,17 +190,6 @@ BOOL CBasePlayerWeapon :: PlayEmptySound( void )
 		return 0;
 	}
 	return 0;
-}
-
-/*
-=====================
-CBasePlayerWeapon :: ResetEmptySound
-
-=====================
-*/
-void CBasePlayerWeapon :: ResetEmptySound( void )
-{
-	m_iPlayEmptySound = 1;
 }
 
 /*
@@ -317,78 +258,6 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 
 /*
 =====================
-CBasePlayerWeapon::ItemPostFrame
-
-Handles weapon firing, reloading, etc.
-=====================
-*/
-void CBasePlayerWeapon::ItemPostFrame( void )
-{
-	if ((m_fInReload) && (m_pPlayer->m_flNextAttack <= 0.0))
-	{
-#if 0 // FIXME, need ammo on client to make this work right
-		// complete the reload. 
-		int j = V_min( iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);	
-
-		// Add them to the clip
-		m_iClip += j;
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= j;
-#else	
-		m_iClip += 10;
-#endif
-		m_fInReload = FALSE;
-	}
-
-	if ((m_pPlayer->pev->button & IN_ATTACK2) && (m_flNextSecondaryAttack <= 0.0))
-	{
-		if ( pszAmmo2() && !m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()] )
-		{
-			m_fFireOnEmpty = TRUE;
-		}
-
-		SecondaryAttack();
-		m_pPlayer->pev->button &= ~IN_ATTACK2;
-	}
-	else if ((m_pPlayer->pev->button & IN_ATTACK) && (m_flNextPrimaryAttack <= 0.0))
-	{
-		if ( (m_iClip == 0 && pszAmmo1()) || (iMaxClip() == -1 && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()] ) )
-		{
-			m_fFireOnEmpty = TRUE;
-		}
-
-		PrimaryAttack();
-	}
-	else if ( m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
-	{
-		// reload when reload is pressed, or if no buttons are down and weapon is empty.
-		Reload();
-	}
-	else if ( !(m_pPlayer->pev->button & (IN_ATTACK|IN_ATTACK2) ) )
-	{
-		// no fire buttons down
-
-		m_fFireOnEmpty = FALSE;
-
-		// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
-		if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < 0.0 )
-		{
-			Reload();
-			return;
-		}
-
-		WeaponIdle( );
-		return;
-	}
-	
-	// catch all
-	if ( ShouldWeaponIdle() )
-	{
-		WeaponIdle();
-	}
-}
-
-/*
-=====================
 CBasePlayer::SelectItem
 
   Switch weapons
@@ -422,33 +291,6 @@ void CBasePlayer::SelectItem(const char *pstr)
 
 /*
 =====================
-CBasePlayer::SelectLastItem
-
-=====================
-*/
-void CBasePlayer::SelectLastItem(void)
-{
-	if (!m_pLastItem)
-	{
-		return;
-	}
-
-	if ( m_pActiveItem && !m_pActiveItem->CanHolster() )
-	{
-		return;
-	}
-
-	if (m_pActiveItem)
-		m_pActiveItem->Holster( );
-	
-	CBasePlayerItem *pTemp = m_pActiveItem;
-	m_pActiveItem = m_pLastItem;
-	m_pLastItem = pTemp;
-	m_pActiveItem->Deploy( );
-}
-
-/*
-=====================
 CBasePlayer::Killed
 
 =====================
@@ -468,7 +310,7 @@ CBasePlayer::Spawn
 
 =====================
 */
-void CBasePlayer::Spawn( void )
+void CBasePlayer::Spawn()
 {
 	if (m_pActiveItem)
 		m_pActiveItem->Deploy( );
@@ -499,7 +341,7 @@ For debugging, draw a box around a player made out of particles
 void UTIL_ParticleBox( CBasePlayer *player, float *mins, float *maxs, float life, unsigned char r, unsigned char g, unsigned char b )
 {
 	int i;
-	vec3_t mmin, mmax;
+	Vector mmin, mmax;
 
 	for ( i = 0; i < 3; i++ )
 	{
@@ -517,12 +359,12 @@ UTIL_ParticleBoxes
 For debugging, draw boxes for other collidable players
 =====================
 */
-void UTIL_ParticleBoxes( void )
+void UTIL_ParticleBoxes()
 {
 	int idx;
 	physent_t *pe;
 	cl_entity_t *player;
-	vec3_t mins, maxs;
+	Vector mins, maxs;
 	
 	gEngfuncs.pEventAPI->EV_SetUpPlayerPrediction( false, true );
 
@@ -570,7 +412,7 @@ HUD_InitClientWeapons
 Set up weapons, player and functions needed to run weapons code client-side.
 =====================
 */
-void HUD_InitClientWeapons( void )
+void HUD_InitClientWeapons()
 {
 	static int initialized = 0;
 	if ( initialized )
@@ -600,6 +442,9 @@ void HUD_InitClientWeapons( void )
 	g_engfuncs.pfnPrecacheEvent		= gEngfuncs.pfnPrecacheEvent;
 	g_engfuncs.pfnRandomFloat		= gEngfuncs.pfnRandomFloat;
 	g_engfuncs.pfnRandomLong		= gEngfuncs.pfnRandomLong;
+	g_engfuncs.pfnCVarGetPointer	= gEngfuncs.pfnGetCvarPointer;
+	g_engfuncs.pfnCVarGetString		= gEngfuncs.pfnGetCvarString;
+	g_engfuncs.pfnCVarGetFloat		= gEngfuncs.pfnGetCvarFloat;
 
 	// Allocate a slot for the local player
 	HUD_PrepEntity( &player		, NULL );
@@ -646,7 +491,7 @@ HUD_SetLastOrg
 Remember our exact predicted origin so we can draw the egon to the right position.
 =====================
 */
-void HUD_SetLastOrg( void )
+void HUD_SetLastOrg()
 {
 	int i;
 	
@@ -821,7 +666,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	player.pev->deadflag = from->client.deadflag;
 	player.pev->waterlevel = from->client.waterlevel;
 	player.pev->maxspeed    = from->client.maxspeed;
-	player.pev->fov = from->client.fov;
+	player.m_iFOV = from->client.fov;
 	player.pev->weaponanim = from->client.weaponanim;
 	player.pev->viewmodel = from->client.viewmodel;
 	player.m_flNextAttack = from->client.m_flNextAttack;
@@ -895,7 +740,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	// Copy in results of prediction code
 	to->client.viewmodel				= player.pev->viewmodel;
-	to->client.fov						= player.pev->fov;
+	to->client.fov						= player.m_iFOV;
 	to->client.weaponanim				= player.pev->weaponanim;
 	to->client.m_flNextAttack			= player.m_flNextAttack;
 	to->client.fuser2					= player.m_flNextAmmoBurn;
@@ -923,18 +768,11 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	//  over the wire ( fixes some animation glitches )
 	if ( g_runfuncs && ( HUD_GetWeaponAnim() != to->client.weaponanim ) )
 	{
-		int body = 2;
+		//Make sure the 357 has the right body
+		g_Python.pev->body = bIsMultiplayer() ? 1 : 0;
 
-		//Pop the model to body 0.
-		if ( pWeapon == &g_Tripmine )
-			 body = 0;
-
-		//Show laser sight/scope combo
-		if ( pWeapon == &g_Python && bIsMultiplayer() )
-			 body = 1;
-		
 		// Force a fixed anim down to viewmodel
-		HUD_SendWeaponAnim( to->client.weaponanim, body, 1 );
+		HUD_SendWeaponAnim( to->client.weaponanim, pWeapon->pev->body, 1 );
 	}
 
 	for ( i = 0; i < 32; i++ )

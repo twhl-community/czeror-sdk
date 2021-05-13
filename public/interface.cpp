@@ -150,7 +150,12 @@ CSysModule	*Sys_LoadModule( const char *pModuleName )
 		char szCwd[1024];
 		char szAbsoluteModuleName[1024];
 
-		getcwd( szCwd, sizeof( szCwd ) );
+		//Prevent loading from garbage paths if the path is too large for the buffer
+		if (!getcwd(szCwd, sizeof(szCwd)))
+		{
+			exit(-1);
+		}
+
 		if ( szCwd[ strlen( szCwd ) - 1 ] == '/' )
 			szCwd[ strlen( szCwd ) - 1 ] = 0;
 
@@ -236,7 +241,7 @@ CreateInterfaceFn Sys_GetFactory( CSysModule *pModule )
 // Purpose: returns the instance of this module
 // Output : interface_instance_t
 //-----------------------------------------------------------------------------
-CreateInterfaceFn Sys_GetFactoryThis( void )
+CreateInterfaceFn Sys_GetFactoryThis()
 {
 #ifdef LINUX
 	return CreateInterfaceLocal;

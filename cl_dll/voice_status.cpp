@@ -21,7 +21,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "parsemsg.h"
-#include "hud_servers.h"
 #include "demo.h"
 #include "demo_api.h"
 #include "voice_status.h"
@@ -202,7 +201,7 @@ int CVoiceStatus::Init(
 	g_pInternalVoiceStatus = this;
 
 	m_BlinkTimer = 0;
-	m_VoiceHeadModel = NULL;
+	m_VoiceHeadModel = 0;
 	memset(m_Labels, 0, sizeof(m_Labels));
 	
 	for(int i=0; i < MAX_VOICE_SPEAKERS; i++)
@@ -554,7 +553,7 @@ void CVoiceStatus::UpdateServerState(bool bForce)
 
 		// Ok, the server needs to be updated.
 		char numStr[512];
-		sprintf(numStr, " %x", banMask);
+		sprintf(numStr, " %lx", banMask);
 		strcat(str, numStr);
 	}
 
@@ -648,10 +647,10 @@ void CVoiceStatus::HandleVoiceMaskMsg(int iSize, void *pbuf)
 			char str[256];
 			gEngfuncs.pfnConsolePrint("CVoiceStatus::HandleVoiceMaskMsg\n");
 			
-			sprintf(str, "    - m_AudiblePlayers[%d] = %lu\n", dw, m_AudiblePlayers.GetDWord(dw));
+			sprintf(str, "    - m_AudiblePlayers[%lu] = %u\n", dw, m_AudiblePlayers.GetDWord(dw));
 			gEngfuncs.pfnConsolePrint(str);
 			
-			sprintf(str, "    - m_ServerBannedPlayers[%d] = %lu\n", dw, m_ServerBannedPlayers.GetDWord(dw));
+			sprintf(str, "    - m_ServerBannedPlayers[%lu] = %u\n", dw, m_ServerBannedPlayers.GetDWord(dw));
 			gEngfuncs.pfnConsolePrint(str);
 		}
 	}

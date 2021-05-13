@@ -23,7 +23,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "parsemsg.h"
-#include "hud_servers.h"
 #include "vgui_int.h"
 #include "vgui_TeamFortressViewport.h"
 
@@ -37,7 +36,7 @@ extra_player_info_t  g_PlayerExtraInfo[MAX_PLAYERS+1];   // additional player in
 class CHLVoiceStatusHelper : public IVoiceStatusHelper
 {
 public:
-	virtual void GetPlayerTextColor(int entindex, int color[3])
+	void GetPlayerTextColor(int entindex, int color[3]) override
 	{
 		color[0] = color[1] = color[2] = 255;
 
@@ -58,17 +57,17 @@ public:
 		}
 	}
 
-	virtual void UpdateCursorState()
+	void UpdateCursorState() override
 	{
 		gViewPort->UpdateCursorState();
 	}
 
-	virtual int	GetAckIconHeight()
+	int	GetAckIconHeight() override
 	{
 		return ScreenHeight - gHUD.m_iFontHeight*3 - 6;
 	}
 
-	virtual bool			CanShowSpeakerLabels()
+	bool CanShowSpeakerLabels() override
 	{
 		if( gViewPort && gViewPort->m_pScoreBoard )
 			return !gViewPort->m_pScoreBoard->isVisible();
@@ -83,8 +82,11 @@ extern client_sprite_t *GetSpriteList(client_sprite_t *pList, const char *psz, i
 
 extern cvar_t *sensitivity;
 cvar_t *cl_lw = NULL;
+cvar_t* cl_rollangle = nullptr;
+cvar_t* cl_rollspeed = nullptr;
+cvar_t* cl_bobtilt = nullptr;
 
-void ShutdownInput (void);
+void ShutdownInput ();
 
 //DECLARE_MESSAGE(m_Logo, Logo)
 int __MsgFunc_Logo(const char *pszName, int iSize, void *pbuf)
@@ -126,7 +128,7 @@ int __MsgFunc_GameMode(const char *pszName, int iSize, void *pbuf )
 }
 
 // TFFree Command Menu
-void __CmdFunc_OpenCommandMenu(void)
+void __CmdFunc_OpenCommandMenu()
 {
 	if ( gViewPort )
 	{
@@ -135,7 +137,7 @@ void __CmdFunc_OpenCommandMenu(void)
 }
 
 // TFC "special" command
-void __CmdFunc_InputPlayerSpecial(void)
+void __CmdFunc_InputPlayerSpecial()
 {
 	if ( gViewPort )
 	{
@@ -143,7 +145,7 @@ void __CmdFunc_InputPlayerSpecial(void)
 	}
 }
 
-void __CmdFunc_CloseCommandMenu(void)
+void __CmdFunc_CloseCommandMenu()
 {
 	if ( gViewPort )
 	{
@@ -151,19 +153,11 @@ void __CmdFunc_CloseCommandMenu(void)
 	}
 }
 
-void __CmdFunc_ForceCloseCommandMenu( void )
+void __CmdFunc_ForceCloseCommandMenu()
 {
 	if ( gViewPort )
 	{
 		gViewPort->HideCommandMenu();
-	}
-}
-
-void __CmdFunc_ToggleServerBrowser( void )
-{
-	if ( gViewPort )
-	{
-		gViewPort->ToggleServerBrowser();
 	}
 }
 
@@ -281,7 +275,7 @@ int __MsgFunc_AllowSpec(const char *pszName, int iSize, void *pbuf)
 }
 
 // This is called every time the DLL is loaded
-void CHud :: Init( void )
+void CHud :: Init()
 {
 	HOOK_MESSAGE( Logo );
 	HOOK_MESSAGE( ResetHUD );
@@ -296,7 +290,6 @@ void CHud :: Init( void )
 	HOOK_COMMAND( "-commandmenu", CloseCommandMenu );
 	HOOK_COMMAND( "ForceCloseCommandMenu", ForceCloseCommandMenu );
 	HOOK_COMMAND( "special", InputPlayerSpecial );
-	HOOK_COMMAND( "togglebrowser", ToggleServerBrowser );
 
 	HOOK_MESSAGE( ValClass );
 	HOOK_MESSAGE( TeamNames );
@@ -327,10 +320,14 @@ void CHud :: Init( void )
 	m_iFOV = 0;
 
 	CVAR_CREATE( "zoom_sensitivity_ratio", "1.2", 0 );
-	default_fov = CVAR_CREATE( "default_fov", "90", 0 );
+	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
+	default_fov = CVAR_CREATE( "default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE( "hud_capturemouse", "1", FCVAR_ARCHIVE );
 	m_pCvarDraw = CVAR_CREATE( "hud_draw", "1", FCVAR_ARCHIVE );
 	cl_lw = gEngfuncs.pfnGetCvarPointer( "cl_lw" );
+	cl_rollangle = CVAR_CREATE("cl_rollangle", "2.0", FCVAR_ARCHIVE);
+	cl_rollspeed = CVAR_CREATE("cl_rollspeed", "200", FCVAR_ARCHIVE);
+	cl_bobtilt = CVAR_CREATE("cl_bobtilt", "0", FCVAR_ARCHIVE);
 
 	m_pSpriteList = NULL;
 
@@ -368,8 +365,6 @@ void CHud :: Init( void )
 
 	m_Menu.Init();
 	
-	ServersInit();
-
 	MsgFunc_ResetHUD(0, 0, NULL );
 }
 
@@ -392,8 +387,6 @@ CHud :: ~CHud()
 		}
 		m_pHudList = NULL;
 	}
-
-	ServersShutdown();
 }
 
 // GetSpriteIndex()
@@ -412,7 +405,7 @@ int CHud :: GetSpriteIndex( const char *SpriteName )
 	return -1; // invalid sprite
 }
 
-void CHud :: VidInit( void )
+void CHud :: VidInit()
 {
 	m_scrinfo.iSize = sizeof(m_scrinfo);
 	GetScreenInfo(&m_scrinfo);
@@ -598,7 +591,7 @@ HUD_GetFOV
 Returns last FOV
 =====================
 */
-float HUD_GetFOV( void )
+float HUD_GetFOV()
 {
 	if ( gEngfuncs.pDemoAPI->IsRecording() )
 	{
@@ -628,8 +621,11 @@ int CHud::MsgFunc_SetFOV(const char *pszName,  int iSize, void *pbuf)
 	int def_fov = CVAR_GET_FLOAT( "default_fov" );
 
 	//Weapon prediction already takes care of changing the fog. ( g_lastFOV ).
+	//But it doesn't restore correctly so this still needs to be used
+	/*
 	if ( cl_lw && cl_lw->value )
 		return 1;
+		*/
 
 	g_lastFOV = newfov;
 
@@ -690,7 +686,7 @@ void CHud::AddHudElem(CHudBase *phudelem)
 	ptemp->pNext = pdl;
 }
 
-float CHud::GetSensitivity( void )
+float CHud::GetSensitivity()
 {
 	return m_flMouseSensitivity;
 }

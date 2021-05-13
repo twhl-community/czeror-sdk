@@ -64,7 +64,7 @@ BOOL CFlyingMonster :: FTriangulate ( const Vector &vecStart , const Vector &vec
 }
 
 
-Activity CFlyingMonster :: GetStoppedActivity( void )
+Activity CFlyingMonster :: GetStoppedActivity()
 { 
 	if ( pev->movetype != MOVETYPE_FLY )		// UNDONE: Ground idle here, IDLE may be something else
 		return ACT_IDLE;
@@ -73,7 +73,7 @@ Activity CFlyingMonster :: GetStoppedActivity( void )
 }
 
 
-void CFlyingMonster :: Stop( void ) 
+void CFlyingMonster :: Stop() 
 { 
 	Activity stopped = GetStoppedActivity();
 	if ( m_IdealActivity != stopped )
@@ -101,7 +101,22 @@ float CFlyingMonster :: ChangeYaw( int speed )
 			else if ( diff > 20 )
 				target = -90;
 		}
-		pev->angles.z = UTIL_Approach( target, pev->angles.z, 220.0 * gpGlobals->frametime );
+
+		if (m_flLastZYawTime == 0)
+		{
+			m_flLastZYawTime = gpGlobals->time - gpGlobals->frametime;
+		}
+
+		float delta = gpGlobals->time - m_flLastZYawTime;
+
+		m_flLastZYawTime = gpGlobals->time;
+
+		if (delta > 0.25)
+		{
+			delta = 0.25;
+		}
+
+		pev->angles.z = UTIL_Approach( target, pev->angles.z, 220.0 * delta );
 	}
 	return CBaseMonster::ChangeYaw( speed );
 }

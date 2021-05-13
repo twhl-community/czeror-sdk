@@ -19,7 +19,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <memory.h>
-#include <math.h>
 
 #include "studio_util.h"
 #include "r_studioint.h"
@@ -44,7 +43,7 @@ CGameStudioModelRenderer
 
 ====================
 */
-CGameStudioModelRenderer::CGameStudioModelRenderer( void )
+CGameStudioModelRenderer::CGameStudioModelRenderer()
 {
 }
 
@@ -80,7 +79,7 @@ R_StudioInit
 
 ====================
 */
-void R_StudioInit( void )
+void R_StudioInit()
 {
 	g_StudioRenderer.Init();
 }

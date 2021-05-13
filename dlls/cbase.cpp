@@ -27,6 +27,8 @@ void PM_Move ( struct playermove_s *ppmove, int server );
 void PM_Init ( struct playermove_s *ppmove  );
 char PM_FindTextureType( char *name );
 
+void OnFreeEntPrivateData(edict_s* pEdict);
+
 extern Vector VecBModelOrigin( entvars_t* pevBModel );
 extern DLL_GLOBAL Vector		g_vecAttackDir;
 extern DLL_GLOBAL int			g_iSkillLevel;
@@ -95,6 +97,11 @@ static DLL_FUNCTIONS gFunctionTable =
 	AllowLagCompensation,		//pfnAllowLagCompensation
 };
 
+NEW_DLL_FUNCTIONS gNewDLLFunctions =
+{
+	OnFreeEntPrivateData,		//pfnOnFreeEntPrivateData
+};
+
 static void SetObjectCollisionBox( entvars_t *pev );
 
 extern "C" {
@@ -123,6 +130,17 @@ int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion )
 	return TRUE;
 }
 
+int GetNewDLLFunctions(NEW_DLL_FUNCTIONS* pFunctionTable, int* interfaceVersion)
+{
+	if (!pFunctionTable || *interfaceVersion != NEW_DLL_FUNCTIONS_VERSION)
+	{
+		*interfaceVersion = NEW_DLL_FUNCTIONS_VERSION;
+		return FALSE;
+	}
+
+	memcpy(pFunctionTable, &gNewDLLFunctions, sizeof(gNewDLLFunctions));
+	return TRUE;
+}
 }
 
 
@@ -248,6 +266,8 @@ void DispatchBlocked( edict_t *pentBlocked, edict_t *pentOther )
 
 void DispatchSave( edict_t *pent, SAVERESTOREDATA *pSaveData )
 {
+	gpGlobals->time = pSaveData->time;
+
 	CBaseEntity *pEntity = (CBaseEntity *)GET_PRIVATE(pent);
 	
 	if ( pEntity && pSaveData )
@@ -278,6 +298,13 @@ void DispatchSave( edict_t *pent, SAVERESTOREDATA *pSaveData )
 	}
 }
 
+void OnFreeEntPrivateData(edict_s* pEdict)
+{
+	if (pEdict && pEdict->pvPrivateData)
+	{
+		((CBaseEntity*)pEdict->pvPrivateData)->~CBaseEntity();
+	}
+}
 
 // Find the matching global entity.  Spit out an error if the designer made entities of
 // different classes with the same global name
@@ -300,6 +327,8 @@ CBaseEntity *FindGlobalEntity( string_t classname, string_t globalname )
 
 int DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity )
 {
+	gpGlobals->time = pSaveData->time;
+
 	CBaseEntity *pEntity = (CBaseEntity *)GET_PRIVATE(pent);
 
 	if ( pEntity && pSaveData )
@@ -436,7 +465,7 @@ void SaveReadFields( SAVERESTOREDATA *pSaveData, const char *pname, void *pBaseD
 }
 
 
-edict_t * EHANDLE::Get( void ) 
+edict_t * EHANDLE::Get() 
 { 
 	if (m_pent)
 	{
@@ -477,11 +506,6 @@ CBaseEntity * EHANDLE :: operator = (CBaseEntity *pEntity)
 		m_serialnumber = 0;
 	}
 	return pEntity;
-}
-
-EHANDLE :: operator int ()
-{
-	return Get() != NULL;
 }
 
 CBaseEntity * EHANDLE :: operator -> ()
@@ -569,7 +593,7 @@ void CBaseEntity :: Killed( entvars_t *pevAttacker, int iGib )
 }
 
 
-CBaseEntity *CBaseEntity::GetNextTarget( void )
+CBaseEntity *CBaseEntity::GetNextTarget()
 {
 	if ( FStringNull( pev->target ) )
 		return NULL;
@@ -664,7 +688,7 @@ void SetObjectCollisionBox( entvars_t *pev )
 }
 
 
-void CBaseEntity::SetObjectCollisionBox( void )
+void CBaseEntity::SetObjectCollisionBox()
 {
 	::SetObjectCollisionBox( pev );
 }
@@ -682,7 +706,7 @@ int	CBaseEntity :: Intersects( CBaseEntity *pOther )
 	return 1;
 }
 
-void CBaseEntity :: MakeDormant( void )
+void CBaseEntity :: MakeDormant()
 {
 	SetBits( pev->flags, FL_DORMANT );
 	
@@ -698,12 +722,12 @@ void CBaseEntity :: MakeDormant( void )
 	UTIL_SetOrigin( pev, pev->origin );
 }
 
-int CBaseEntity :: IsDormant( void )
+int CBaseEntity :: IsDormant()
 {
 	return FBitSet( pev->flags, FL_DORMANT );
 }
 
-BOOL CBaseEntity :: IsInWorld( void )
+BOOL CBaseEntity :: IsInWorld()
 {
 	// position 
 	if (pev->origin.x >= 4096) return FALSE;
@@ -749,7 +773,7 @@ int	CBaseEntity :: DamageDecal( int bitsDamageType )
 
 // NOTE: szName must be a pointer to constant memory, e.g. "monster_class" because the entity
 // will keep a pointer to it after this call.
-CBaseEntity * CBaseEntity::Create( char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner )
+CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner )
 {
 	edict_t	*pent;
 	CBaseEntity *pEntity;

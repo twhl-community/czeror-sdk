@@ -24,26 +24,11 @@
 #include "soundent.h"
 #include "shake.h"
 #include "gamerules.h"
-
-
-#define	GAUSS_PRIMARY_CHARGE_VOLUME	256// how loud gauss is while charging
-#define GAUSS_PRIMARY_FIRE_VOLUME	450// how loud gauss is when discharged
-
-enum gauss_e {
-	GAUSS_IDLE = 0,
-	GAUSS_IDLE2,
-	GAUSS_FIDGET,
-	GAUSS_SPINUP,
-	GAUSS_SPIN,
-	GAUSS_FIRE,
-	GAUSS_FIRE2,
-	GAUSS_HOLSTER,
-	GAUSS_DRAW
-};
+#include "UserMessages.h"
 
 LINK_ENTITY_TO_CLASS( weapon_gauss, CGauss );
 
-float CGauss::GetFullChargeTime( void )
+float CGauss::GetFullChargeTime()
 {
 #ifdef CLIENT_DLL
 	if ( bIsMultiplayer() )
@@ -73,7 +58,7 @@ void CGauss::Spawn( )
 }
 
 
-void CGauss::Precache( void )
+void CGauss::Precache()
 {
 	PRECACHE_MODEL("models/w_gauss.mdl");
 	PRECACHE_MODEL("models/v_gauss.mdl");
@@ -305,7 +290,7 @@ void CGauss::SecondaryAttack()
 // of weaponidle() and make its own function then to try to
 // merge this into Fire(), which has some identical variable names 
 //=========================================================
-void CGauss::StartFire( void )
+void CGauss::StartFire()
 {
 	float flDamage;
 	
@@ -538,7 +523,7 @@ void CGauss::Fire( Vector vecOrigSrc, Vector vecDir, float flDamage )
 
 
 
-void CGauss::WeaponIdle( void )
+void CGauss::WeaponIdle()
 {
 	ResetEmptySound( );
 
@@ -597,18 +582,18 @@ void CGauss::WeaponIdle( void )
 
 class CGaussAmmo : public CBasePlayerAmmo
 {
-	void Spawn( void )
+	void Spawn() override
 	{ 
 		Precache( );
 		SET_MODEL(ENT(pev), "models/w_gaussammo.mdl");
 		CBasePlayerAmmo::Spawn( );
 	}
-	void Precache( void )
+	void Precache() override
 	{
 		PRECACHE_MODEL ("models/w_gaussammo.mdl");
 		PRECACHE_SOUND("items/9mmclip1.wav");
 	}
-	BOOL AddAmmo( CBaseEntity *pOther ) 
+	BOOL AddAmmo( CBaseEntity *pOther ) override
 	{ 
 		if (pOther->GiveAmmo( AMMO_URANIUMBOX_GIVE, "uranium", URANIUM_MAX_CARRY ) != -1)
 		{

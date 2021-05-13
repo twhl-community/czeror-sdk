@@ -27,7 +27,7 @@
 
 DECLARE_MESSAGE(m_Battery, Battery)
 
-int CHudBattery::Init(void)
+int CHudBattery::Init()
 {
 	m_iBat = 0;
 	m_fFade = 0;
@@ -41,7 +41,7 @@ int CHudBattery::Init(void)
 };
 
 
-int CHudBattery::VidInit(void)
+int CHudBattery::VidInit()
 {
 	int HUD_suit_empty = gHUD.GetSpriteIndex( "suit_empty" );
 	int HUD_suit_full = gHUD.GetSpriteIndex( "suit_full" );
@@ -134,7 +134,7 @@ int CHudBattery::Draw(float flTime)
 	int iOffset = (m_prc1->bottom - m_prc1->top)/6;
 
 	y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight / 2;
-	x = ScreenWidth/5;
+	x = ScreenWidth/4;
 
 	// make sure we have the right sprite handles
 	if ( !m_hSprite1 )

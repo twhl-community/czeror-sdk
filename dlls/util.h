@@ -80,8 +80,8 @@ typedef int BOOL;
 #define M_PI			3.14159265358979323846
 
 // Keeps clutter down a bit, when declaring external entity/global method prototypes
-#define DECLARE_GLOBAL_METHOD(MethodName)  extern void DLLEXPORT MethodName( void )
-#define GLOBAL_METHOD(funcname)					void DLLEXPORT funcname(void)
+#define DECLARE_GLOBAL_METHOD(MethodName)  extern void DLLEXPORT MethodName()
+#define GLOBAL_METHOD(funcname)					void DLLEXPORT funcname()
 
 // This is the glue that hooks .MAP entity class names to our CPP classes
 // The _declspec forces them to be exported by name so we can do a lookup with GetProcAddress()
@@ -245,7 +245,7 @@ extern void			UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IG
 extern void			UTIL_TraceLine			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, IGNORE_GLASS ignoreGlass, edict_t *pentIgnore, TraceResult *ptr);
 enum { point_hull=0, human_hull=1, large_hull=2, head_hull=3 };
 extern void			UTIL_TraceHull			(const Vector &vecStart, const Vector &vecEnd, IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore, TraceResult *ptr);
-extern TraceResult	UTIL_GetGlobalTrace		(void);
+extern TraceResult	UTIL_GetGlobalTrace		();
 extern void			UTIL_TraceModel			(const Vector &vecStart, const Vector &vecEnd, int hullNumber, edict_t *pentModel, TraceResult *ptr);
 extern Vector		UTIL_GetAimVector		(edict_t* pent, float flSpeed);
 extern int			UTIL_PointContents		(const Vector &vec);
@@ -253,7 +253,7 @@ extern int			UTIL_PointContents		(const Vector &vec);
 extern int			UTIL_IsMasterTriggered	(string_t sMaster, CBaseEntity *pActivator);
 extern void			UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount );
 extern void			UTIL_BloodDrips( const Vector &origin, const Vector &direction, int color, int amount );
-extern Vector		UTIL_RandomBloodVector( void );
+extern Vector		UTIL_RandomBloodVector();
 extern BOOL			UTIL_ShouldShowBlood( int bloodColor );
 extern void			UTIL_BloodDecalTrace( TraceResult *pTrace, int bloodColor );
 extern void			UTIL_DecalTrace( TraceResult *pTrace, int decalNumber );
@@ -268,7 +268,7 @@ extern float		UTIL_Approach( float target, float value, float speed );
 extern float		UTIL_ApproachAngle( float target, float value, float speed );
 extern float		UTIL_AngleDistance( float next, float cur );
 
-extern char			*UTIL_VarArgs( char *format, ... );
+extern char			*UTIL_VarArgs( const char *format, ... );
 extern void			UTIL_Remove( CBaseEntity *pEntity );
 extern BOOL			UTIL_IsValidEntity( edict_t *pent );
 extern BOOL			UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 );
@@ -328,7 +328,7 @@ extern char *UTIL_dtos3( int d );
 extern char *UTIL_dtos4( int d );
 
 // Writes message to console with timestamp and FragLog header.
-extern void			UTIL_LogPrintf( char *fmt, ... );
+extern void			UTIL_LogPrintf( const char *fmt, ... );
 
 // Sorta like FInViewCone, but for nonmonsters. 
 extern float UTIL_DotPoints ( const Vector &vecSrc, const Vector &vecCheck, const Vector &vecDir );
@@ -351,9 +351,6 @@ void DBG_AssertFunction(BOOL fExpr, const char* szExpr, const char* szFile, int 
 #define ASSERT(f)
 #define ASSERTSZ(f, sz)
 #endif	// !DEBUG
-
-
-extern DLL_GLOBAL const Vector g_vecZero;
 
 //
 // Constants that were used only by QC (maybe not used at all now)
@@ -402,18 +399,6 @@ extern DLL_GLOBAL int			g_Language;
 
 #define PUSH_BLOCK_ONLY_X	1
 #define PUSH_BLOCK_ONLY_Y	2
-
-#define VEC_HULL_MIN		Vector(-16, -16, -36)
-#define VEC_HULL_MAX		Vector( 16,  16,  36)
-#define VEC_HUMAN_HULL_MIN	Vector( -16, -16, 0 )
-#define VEC_HUMAN_HULL_MAX	Vector( 16, 16, 72 )
-#define VEC_HUMAN_HULL_DUCK	Vector( 16, 16, 36 )
-
-#define VEC_VIEW			Vector( 0, 0, 28 )
-
-#define VEC_DUCK_HULL_MIN	Vector(-16, -16, -18 )
-#define VEC_DUCK_HULL_MAX	Vector( 16,  16,  18)
-#define VEC_DUCK_VIEW		Vector( 0, 0, 12 )
 
 #define SVC_TEMPENTITY		23
 #define SVC_INTERMISSION	30
@@ -524,16 +509,18 @@ class UTIL_GroupTrace
 {
 public:
 	UTIL_GroupTrace( int groupmask, int op );
-	~UTIL_GroupTrace( void );
+	~UTIL_GroupTrace();
 
 private:
 	int m_oldgroupmask, m_oldgroupop;
 };
 
 void UTIL_SetGroupTrace( int groupmask, int op );
-void UTIL_UnsetGroupTrace( void );
+void UTIL_UnsetGroupTrace();
 
 int UTIL_SharedRandomLong( unsigned int seed, int low, int high );
 float UTIL_SharedRandomFloat( unsigned int seed, float low, float high );
 
-float UTIL_WeaponTimeBase( void );
+float UTIL_WeaponTimeBase();
+
+CBaseEntity* UTIL_FindEntityForward(CBaseEntity* pMe);

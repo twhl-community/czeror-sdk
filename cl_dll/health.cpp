@@ -20,7 +20,6 @@
 
 #include "stdio.h"
 #include "stdlib.h"
-#include "math.h"
 
 #include "hud.h"
 #include "cl_util.h"
@@ -52,7 +51,7 @@ int giDmgFlags[NUM_DMG_TYPES] =
 	DMG_HALLUC
 };
 
-int CHudHealth::Init(void)
+int CHudHealth::Init()
 {
 	HOOK_MESSAGE(Health);
 	HOOK_MESSAGE(Damage);
@@ -71,7 +70,7 @@ int CHudHealth::Init(void)
 	return 1;
 }
 
-void CHudHealth::Reset( void )
+void CHudHealth::Reset()
 {
 	// make sure the pain compass is cleared when the player respawns
 	m_fAttackFront = m_fAttackRear = m_fAttackRight = m_fAttackLeft = 0;
@@ -85,7 +84,7 @@ void CHudHealth::Reset( void )
 	}
 }
 
-int CHudHealth::VidInit(void)
+int CHudHealth::VidInit()
 {
 	m_hSprite = 0;
 
@@ -101,7 +100,7 @@ int CHudHealth:: MsgFunc_Health(const char *pszName,  int iSize, void *pbuf )
 {
 	// TODO: update local health data
 	BEGIN_READ( pbuf, iSize );
-	int x = READ_BYTE();
+	int x = READ_SHORT();
 
 	m_iFlags |= HUD_ACTIVE;
 
@@ -124,7 +123,7 @@ int CHudHealth:: MsgFunc_Damage(const char *pszName,  int iSize, void *pbuf )
 	int damageTaken = READ_BYTE();	// health
 	long bitsDamage = READ_LONG(); // damage bits
 
-	vec3_t vecFrom;
+	Vector vecFrom;
 
 	for ( int i = 0 ; i < 3 ; i++)
 		vecFrom[i] = READ_COORD();
@@ -218,24 +217,30 @@ int CHudHealth::Draw(float flTime)
 
 		x = CrossWidth + HealthWidth / 2;
 
-		x = gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b);
+		//Reserve space for 3 digits by default, but allow it to expand
+		x += gHUD.GetHudNumberWidth(m_iHealth, 3, DHN_DRAWZERO);
+
+		gHUD.DrawHudNumberReverse(x, y, m_iHealth, DHN_DRAWZERO, r, g, b);
+
+		//x = gHUD.DrawHudNumber(x, y, DHN_3DIGITS | DHN_DRAWZERO, m_iHealth, r, g, b);
 
 		x += HealthWidth/2;
 
 		int iHeight = gHUD.m_iFontHeight;
 		int iWidth = HealthWidth/10;
-		FillRGBA(x, y, iWidth, iHeight, 255, 160, 0, a);
+		UnpackRGB(r, g, b, RGB_YELLOWISH);
+		FillRGBA(x, y, iWidth, iHeight, r, g, b, a);
 	}
 
 	DrawDamage(flTime);
 	return DrawPain(flTime);
 }
 
-void CHudHealth::CalcDamageDirection(vec3_t vecFrom)
+void CHudHealth::CalcDamageDirection(Vector vecFrom)
 {
-	vec3_t	forward, right, up;
+	Vector	forward, right, up;
 	float	side, front;
-	vec3_t vecOrigin, vecAngles;
+	Vector vecOrigin, vecAngles;
 
 	if (!vecFrom[0] && !vecFrom[1] && !vecFrom[2])
 	{
@@ -244,8 +249,8 @@ void CHudHealth::CalcDamageDirection(vec3_t vecFrom)
 	}
 
 
-	memcpy(vecOrigin, gHUD.m_vecOrigin, sizeof(vec3_t));
-	memcpy(vecAngles, gHUD.m_vecAngles, sizeof(vec3_t));
+	memcpy(vecOrigin, gHUD.m_vecOrigin, sizeof(Vector));
+	memcpy(vecAngles, gHUD.m_vecAngles, sizeof(Vector));
 
 
 	VectorSubtract (vecFrom, vecOrigin, vecFrom);

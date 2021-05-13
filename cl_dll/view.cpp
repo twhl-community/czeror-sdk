@@ -21,12 +21,7 @@
 #include "hltv.h"
 #include "Exports.h"
 
-
-#ifndef M_PI
-#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
-#endif
-
-	int CL_IsThirdPerson( void );
+	int CL_IsThirdPerson();
 	void CL_CameraOffset( float *ofs );
 
 	void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams );
@@ -65,18 +60,22 @@ extern cvar_t	*cl_forwardspeed;
 extern cvar_t	*chase_active;
 extern cvar_t	*scr_ofsx, *scr_ofsy, *scr_ofsz;
 extern cvar_t	*cl_vsmoothing;
+extern cvar_t* cl_rollangle;
+extern cvar_t* cl_rollspeed;
+extern cvar_t* cl_bobtilt;
 
 #define	CAM_MODE_RELAX		1
 #define CAM_MODE_FOCUS		2
 
-vec3_t		v_origin, v_angles, v_cl_angles, v_sim_org, v_lastAngles;
+Vector		v_origin, v_angles, v_cl_angles, v_sim_org, v_lastAngles;
 float		v_frametime, v_lastDistance;	
 float		v_cameraRelaxAngle	= 5.0f;
 float		v_cameraFocusAngle	= 35.0f;
 int			v_cameraMode = CAM_MODE_FOCUS;
 qboolean	v_resetCamera = 1;
 
-vec3_t ev_punchangle;
+Vector v_client_aimangles;
+Vector ev_punchangle;
 
 cvar_t	*scr_ofsx;
 cvar_t	*scr_ofsy;
@@ -104,7 +103,7 @@ float	v_idlescale;  // used by TFC for concussion grenade effect
 
 //=============================================================================
 /*
-void V_NormalizeAngles( vec3_t angles )
+void V_NormalizeAngles( Vector& angles )
 {
 	int i;
 	// Normalize angles
@@ -167,7 +166,7 @@ float V_CalcBob ( struct ref_params_s *pparams )
 	static float	bob;
 	float	cycle;
 	static float	lasttime;
-	vec3_t	vel;
+	Vector	vel;
 	
 
 	if ( pparams->onground == -1 ||
@@ -211,12 +210,12 @@ V_CalcRoll
 Used by view and sv_user
 ===============
 */
-float V_CalcRoll (vec3_t angles, vec3_t velocity, float rollangle, float rollspeed )
+float V_CalcRoll (Vector angles, Vector velocity, float rollangle, float rollspeed )
 {
     float   sign;
     float   side;
     float   value;
-	vec3_t  forward, right, up;
+	Vector  forward, right, up;
     
 	AngleVectors ( angles, forward, right, up );
     
@@ -246,7 +245,7 @@ typedef struct pitchdrift_s
 
 static pitchdrift_t pd;
 
-void V_StartPitchDrift( void )
+void V_StartPitchDrift()
 {
 	if ( pd.laststop == gEngfuncs.GetClientTime() )
 	{
@@ -261,7 +260,7 @@ void V_StartPitchDrift( void )
 	}
 }
 
-void V_StopPitchDrift ( void )
+void V_StopPitchDrift ()
 {
 	pd.laststop = gEngfuncs.GetClientTime();
 	pd.nodrift = 1;
@@ -410,7 +409,7 @@ void V_CalcViewRoll ( struct ref_params_s *pparams )
 	if ( !viewentity )
 		return;
 
-	side = V_CalcRoll ( viewentity->angles, pparams->simvel, pparams->movevars->rollangle, pparams->movevars->rollspeed );
+	side = V_CalcRoll ( viewentity->angles, pparams->simvel, cl_rollangle->value, cl_rollspeed->value);
 
 	pparams->viewangles[ROLL] += side;
 
@@ -491,14 +490,14 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 {
 	cl_entity_t		*ent, *view;
 	int				i;
-	vec3_t			angles;
+	Vector			angles;
 	float			bob, waterOffset;
 	static viewinterp_t		ViewInterp;
 
 	static float oldz = 0;
 	static float lasttime;
 
-	vec3_t camAngles, camForward, camRight, camUp;
+	Vector camAngles, camForward, camRight, camUp;
 	cl_entity_t *pwater;
 
 	V_DriftPitch ( pparams );
@@ -546,7 +545,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	if ( pparams->waterlevel >= 2 )
 	{
 		int		i, contents, waterDist, waterEntity;
-		vec3_t	point;
+		Vector	point;
 		waterDist = cl_waterdist->value;
 
 		if ( pparams->hardware )
@@ -620,7 +619,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	// Treating cam_ofs[2] as the distance
 	if( CL_IsThirdPerson() )
 	{
-		vec3_t ofs;
+		Vector ofs;
 
 		ofs[0] = ofs[1] = ofs[2] = 0.0;
 
@@ -661,6 +660,11 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	view->angles[YAW]   -= bob * 0.5;
 	view->angles[ROLL]  -= bob * 1;
 	view->angles[PITCH] -= bob * 0.3;
+
+	if (cl_bobtilt->value)
+	{
+		VectorCopy(view->angles, view->curstate.angles);
+	}
 
 	// pushing the view origin down off of the same X/Z plane as the ent's origin will give the
 	// gun a very nice 'shifting' effect when the player looks up/down. If there is a problem
@@ -721,7 +725,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 
 	{
 		static float lastorg[3];
-		vec3_t delta;
+		Vector delta;
 
 		VectorSubtract( pparams->simorg, lastorg, delta );
 
@@ -760,10 +764,10 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 		if ( i < ORIGIN_MASK &&  ViewInterp.OriginTime[ foundidx & ORIGIN_MASK ] != 0.0 )
 		{
 			// Interpolate
-			vec3_t delta;
+			Vector delta;
 			double frac;
 			double dt;
-			vec3_t neworg;
+			Vector neworg;
 
 			dt = ViewInterp.OriginTime[ (foundidx + 1) & ORIGIN_MASK ] - ViewInterp.OriginTime[ foundidx & ORIGIN_MASK ];
 			if ( dt > 0.0 )
@@ -789,27 +793,32 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 
 	// Store off v_angles before munging for third person
 	v_angles = pparams->viewangles;
+	v_client_aimangles = pparams->cl_viewangles;
 	v_lastAngles = pparams->viewangles;
 //	v_cl_angles = pparams->cl_viewangles;	// keep old user mouse angles !
 	if ( CL_IsThirdPerson() )
 	{
 		VectorCopy( camAngles, pparams->viewangles);
-		float pitch = camAngles[ 0 ];
+	}
+
+	//Apply this at all times
+	{
+		float pitch = pparams->viewangles[0];
 
 		// Normalize angles
-		if ( pitch > 180 ) 
+		if (pitch > 180)
 			pitch -= 360.0;
-		else if ( pitch < -180 )
+		else if (pitch < -180)
 			pitch += 360;
 
 		// Player pitch is inverted
 		pitch /= -3.0;
 
 		// Slam local player's pitch value
-		ent->angles[ 0 ] = pitch;
-		ent->curstate.angles[ 0 ] = pitch;
-		ent->prevstate.angles[ 0 ] = pitch;
-		ent->latched.prevangles[ 0 ] = pitch;
+		ent->angles[0] = pitch;
+		ent->curstate.angles[0] = pitch;
+		ent->prevstate.angles[0] = pitch;
+		ent->latched.prevangles[0] = pitch;
 	}
 
 	// override all previous settings if the viewent isn't the client
@@ -892,9 +901,9 @@ void V_SmoothInterpolateAngles( float * startAngle, float * endAngle, float * fi
 // Get the origin of the Observer based around the target's position and angles
 void V_GetChaseOrigin( float * angles, float * origin, float distance, float * returnvec )
 {
-	vec3_t	vecEnd;
-	vec3_t	forward;
-	vec3_t	vecStart;
+	Vector	vecEnd;
+	Vector	forward;
+	Vector	vecStart;
 	pmtrace_t * trace;
 	int maxLoops = 8;
 
@@ -1271,7 +1280,7 @@ void V_GetChasePos(int target, float * cl_angles, float * origin, float * angles
 
 		VectorCopy ( ent->origin, origin);
 		
-		origin[2]+= 28; // DEFAULT_VIEWHEIGHT - some offset
+		VectorAdd(origin, VEC_VIEW, origin); // some offset
 
 		V_GetChaseOrigin( angles, origin, cl_chasedist->value, origin );
 	}
@@ -1309,20 +1318,22 @@ void V_GetInEyePos(int target, float * origin, float * angles )
 	if ( ent->curstate.solid == SOLID_NOT )
 	{
 		angles[ROLL] = 80;	// dead view angle
-		origin[2]+= -8 ; // PM_DEAD_VIEWHEIGHT
+		VectorAdd(origin, VEC_DEAD_VIEW, origin);
 	}
-	else if (ent->curstate.usehull == 1 )
-		origin[2]+= 12; // VEC_DUCK_VIEW;
+	else if (ent->curstate.usehull == 1)
+	{
+		VectorAdd(origin, VEC_DUCK_VIEW, origin);
+	}
 	else
 		// exacty eye position can't be caluculated since it depends on
 		// client values like cl_bobcycle, this offset matches the default values
-		origin[2]+= 28; // DEFAULT_VIEWHEIGHT
+		VectorAdd(origin, VEC_VIEW, origin);
 }
 
 void V_GetMapFreePosition( float * cl_angles, float * origin, float * angles )
 {
-	vec3_t forward;
-	vec3_t zScaledTarget;
+	Vector forward;
+	Vector zScaledTarget;
 
 	VectorCopy(cl_angles, angles);
 
@@ -1343,7 +1354,7 @@ void V_GetMapFreePosition( float * cl_angles, float * origin, float * angles )
 
 void V_GetMapChasePosition(int target, float * cl_angles, float * origin, float * angles)
 {
-	vec3_t forward;
+	Vector forward;
 
 	if ( target )
 	{
@@ -1387,7 +1398,7 @@ void V_GetMapChasePosition(int target, float * cl_angles, float * origin, float 
 int V_FindViewModelByWeaponModel(int weaponindex)
 {
 
-	static char * modelmap[][2] =	{
+	static const char * modelmap[][2] =	{
 
 # ifdef _TFC	// TFC models override HL models
 		{ "models/p_mini.mdl",			"models/v_tfac.mdl"			},
@@ -1457,7 +1468,7 @@ V_CalcSpectatorRefdef
 */
 void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 {
-	static vec3_t			velocity ( 0.0f, 0.0f, 0.0f);
+	static Vector			velocity ( 0.0f, 0.0f, 0.0f);
 
 	static int lastWeaponModelIndex = 0;
 	static int lastViewModelIndex = 0;
@@ -1481,7 +1492,7 @@ void V_CalcSpectatorRefdef ( struct ref_params_s * pparams )
 
 		if ( timeDiff > 0 )
 		{
-			vec3_t distance;
+			Vector distance;
 			VectorSubtract(ent->prevstate.origin, ent->curstate.origin, distance);
 			VectorScale(distance, 1/timeDiff, distance );
 
@@ -1700,7 +1711,7 @@ void V_PunchAxis( int axis, float punch )
 V_Init
 =============
 */
-void V_Init (void)
+void V_Init ()
 {
 	gEngfuncs.pfnAddCommand ("centerview", V_StartPitchDrift );
 
@@ -1754,10 +1765,10 @@ void V_Move( int mx, int my )
 	float dx, dy;
 	float c_x, c_y;
 	float dX, dY;
-	vec3_t forward, up, right;
-	vec3_t newangles;
+	Vector forward, up, right;
+	Vector newangles;
 
-	vec3_t farpoint;
+	Vector farpoint;
 	pmtrace_t tr;
 
 	fov = CalcFov( in_fov, (float)ScreenWidth, (float)ScreenHeight );

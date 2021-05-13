@@ -41,7 +41,7 @@ struct DeathNoticeItem {
 #define MAX_DEATHNOTICES	4
 static int DEATHNOTICE_DISPLAY_TIME = 6;
 
-#define DEATHNOTICE_TOP		32
+#define DEATHNOTICE_TOP		64
 
 DeathNoticeItem rgDeathNoticeList[ MAX_DEATHNOTICES + 1 ];
 
@@ -67,7 +67,7 @@ float *GetClientColor( int clientIndex )
 	return NULL;
 }
 
-int CHudDeathNotice :: Init( void )
+int CHudDeathNotice :: Init()
 {
 	gHUD.AddHudElem( this );
 
@@ -79,13 +79,13 @@ int CHudDeathNotice :: Init( void )
 }
 
 
-void CHudDeathNotice :: InitHUDData( void )
+void CHudDeathNotice :: InitHUDData()
 {
 	memset( rgDeathNoticeList, 0, sizeof(rgDeathNoticeList) );
 }
 
 
-int CHudDeathNotice :: VidInit( void )
+int CHudDeathNotice :: VidInit()
 {
 	m_HUD_d_skull = gHUD.GetSpriteIndex( "d_skull" );
 
@@ -189,7 +189,7 @@ int CHudDeathNotice :: MsgFunc_DeathMsg( const char *pszName, int iSize, void *p
 		gViewPort->GetAllPlayersInfo();
 
 	// Get the Killer's name
-	char *killer_name = g_PlayerInfoList[ killer ].name;
+	const char *killer_name = g_PlayerInfoList[ killer ].name;
 	if ( !killer_name )
 	{
 		killer_name = "";
@@ -203,7 +203,7 @@ int CHudDeathNotice :: MsgFunc_DeathMsg( const char *pszName, int iSize, void *p
 	}
 
 	// Get the Victim's name
-	char *victim_name = NULL;
+	const char *victim_name = NULL;
 	// If victim is -1, the killer killed a specific, non-player object (like a sentrygun)
 	if ( ((char)victim) != -1 )
 		victim_name = g_PlayerInfoList[ victim ].name;

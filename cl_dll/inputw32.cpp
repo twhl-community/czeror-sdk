@@ -156,6 +156,7 @@ DWORD	s_hMouseThreadId = 0;
 HANDLE	s_hMouseThread = 0;
 HANDLE	s_hMouseQuitEvent = 0;
 HANDLE	s_hMouseDoneQuitEvent = 0;
+SDL_bool mouseRelative = SDL_TRUE;
 #endif
 
 /*
@@ -163,9 +164,9 @@ HANDLE	s_hMouseDoneQuitEvent = 0;
 Force_CenterView_f
 ===========
 */
-void Force_CenterView_f (void)
+void Force_CenterView_f ()
 {
-	vec3_t viewangles;
+	Vector viewangles;
 
 	if (!iMouseInUse)
 	{
@@ -224,7 +225,7 @@ DWORD WINAPI MousePos_ThreadFunction( LPVOID p )
 IN_ActivateMouse
 ===========
 */
-void DLLEXPORT IN_ActivateMouse (void)
+void DLLEXPORT IN_ActivateMouse ()
 {
 	if (mouseinitialized)
 	{
@@ -235,6 +236,21 @@ void DLLEXPORT IN_ActivateMouse (void)
 #endif
 		mouseactive = 1;
 	}
+
+#ifdef _WIN32
+	if (!m_bRawInput)
+	{
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+		mouseRelative = SDL_FALSE;
+	}
+	else
+	{
+		mouseRelative = SDL_TRUE;
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+	}
+#else
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+#endif
 }
 
 
@@ -243,7 +259,7 @@ void DLLEXPORT IN_ActivateMouse (void)
 IN_DeactivateMouse
 ===========
 */
-void DLLEXPORT IN_DeactivateMouse (void)
+void DLLEXPORT IN_DeactivateMouse ()
 {
 	if (mouseinitialized)
 	{
@@ -255,6 +271,15 @@ void DLLEXPORT IN_DeactivateMouse (void)
 
 		mouseactive = 0;
 	}
+
+#ifdef _WIN32
+	if (m_bRawInput)
+	{
+		mouseRelative = SDL_FALSE;
+	}
+
+#endif
+	SDL_SetRelativeMouseMode(SDL_FALSE);
 }
 
 /*
@@ -262,7 +287,7 @@ void DLLEXPORT IN_DeactivateMouse (void)
 IN_StartupMouse
 ===========
 */
-void IN_StartupMouse (void)
+void IN_StartupMouse ()
 {
 	if ( gEngfuncs.CheckParm ("-nomouse", NULL ) ) 
 		return; 
@@ -299,7 +324,7 @@ void IN_StartupMouse (void)
 IN_Shutdown
 ===========
 */
-void IN_Shutdown (void)
+void IN_Shutdown ()
 {
 	IN_DeactivateMouse ();
 
@@ -351,7 +376,7 @@ IN_ResetMouse
 FIXME: Call through to engine?
 ===========
 */
-void IN_ResetMouse( void )
+void IN_ResetMouse()
 {
 	// no work to do in SDL
 #ifdef _WIN32
@@ -459,7 +484,7 @@ IN_MouseMove
 void IN_MouseMove ( float frametime, usercmd_t *cmd)
 {
 	int		mx, my;
-	vec3_t viewangles;
+	Vector viewangles;
 
 	gEngfuncs.GetViewAngles( (float *)viewangles );
 
@@ -572,6 +597,19 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 
 	gEngfuncs.SetViewAngles( (float *)viewangles );
 
+#ifdef _WIN32
+	if (!m_bRawInput && mouseRelative)
+	{
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+		mouseRelative = SDL_FALSE;
+	}
+	else if (m_bRawInput && !mouseRelative)
+	{
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+		mouseRelative = SDL_TRUE;
+	}
+#endif
+
 /*
 //#define TRACE_TEST
 #if defined( TRACE_TEST )
@@ -590,7 +628,7 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 IN_Accumulate
 ===========
 */
-void DLLEXPORT IN_Accumulate (void)
+void DLLEXPORT IN_Accumulate ()
 {
 	//only accumulate mouse if we are not moving the camera with the mouse
 	if ( !iMouseInUse && !g_iVisibleMouse)
@@ -629,7 +667,7 @@ void DLLEXPORT IN_Accumulate (void)
 IN_ClearStates
 ===================
 */
-void DLLEXPORT IN_ClearStates (void)
+void DLLEXPORT IN_ClearStates ()
 {
 	if ( !mouseactive )
 		return;
@@ -644,7 +682,7 @@ void DLLEXPORT IN_ClearStates (void)
 IN_StartupJoystick 
 =============== 
 */  
-void IN_StartupJoystick (void) 
+void IN_StartupJoystick () 
 { 
 	// abort startup if user requests no joystick
 	if ( gEngfuncs.CheckParm ("-nojoy", NULL ) ) 
@@ -711,7 +749,7 @@ int RawValuePointer (int axis)
 Joy_AdvancedUpdate_f
 ===========
 */
-void Joy_AdvancedUpdate_f (void)
+void Joy_AdvancedUpdate_f ()
 {
 
 	// called once by IN_ReadJoystick and by user whenever an update is needed
@@ -773,7 +811,7 @@ void Joy_AdvancedUpdate_f (void)
 IN_Commands
 ===========
 */
-void IN_Commands (void)
+void IN_Commands ()
 {
 	int		i, key_index;
 
@@ -845,7 +883,7 @@ void IN_Commands (void)
 IN_ReadJoystick
 =============== 
 */  
-int IN_ReadJoystick (void)
+int IN_ReadJoystick ()
 {
 	SDL_JoystickUpdate();
 	return 1;
@@ -862,7 +900,7 @@ void IN_JoyMove ( float frametime, usercmd_t *cmd )
 	float	speed, aspeed;
 	float	fAxisValue, fTemp;
 	int		i;
-	vec3_t viewangles;
+	Vector viewangles;
 
 	gEngfuncs.GetViewAngles( (float *)viewangles );
 
@@ -1059,7 +1097,7 @@ void IN_Move ( float frametime, usercmd_t *cmd)
 IN_Init
 ===========
 */
-void IN_Init (void)
+void IN_Init ()
 {
 	m_filter				= gEngfuncs.pfnRegisterVariable ( "m_filter","0", FCVAR_ARCHIVE );
 	sensitivity				= gEngfuncs.pfnRegisterVariable ( "sensitivity","3", FCVAR_ARCHIVE ); // user mouse sensitivity setting.

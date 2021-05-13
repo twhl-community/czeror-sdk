@@ -23,6 +23,7 @@
 #include	"gamerules.h"
 #include	"teamplay_gamerules.h"
 #include	"game.h"
+#include "UserMessages.h"
 
 static char team_names[MAX_TEAMS][MAX_TEAMNAME_LENGTH];
 static int team_scores[MAX_TEAMS];
@@ -71,7 +72,7 @@ extern cvar_t timeleft, fragsleft;
 #include "voice_gamemgr.h"
 extern CVoiceGameMgr	g_VoiceGameMgr;
 
-void CHalfLifeTeamplay :: Think ( void )
+void CHalfLifeTeamplay :: Think ()
 {
 	///// Check game rules /////
 	static int last_frags;
@@ -162,12 +163,6 @@ BOOL CHalfLifeTeamplay :: ClientCommand( CBasePlayer *pPlayer, const char *pcmd 
 
 	return FALSE;
 }
-
-extern int gmsgGameMode;
-extern int gmsgSayText;
-extern int gmsgTeamInfo;
-extern int gmsgTeamNames;
-extern int gmsgScoreInfo;
 
 void CHalfLifeTeamplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
@@ -358,8 +353,6 @@ void CHalfLifeTeamplay::ClientUserInfoChanged( CBasePlayer *pPlayer, char *infob
 	RecountTeams( TRUE );
 }
 
-extern int gmsgDeathMsg;
-
 //=========================================================
 // Deathnotice. 
 //=========================================================
@@ -404,7 +397,7 @@ void CHalfLifeTeamplay :: PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller
 //=========================================================
 // IsTeamplay
 //=========================================================
-BOOL CHalfLifeTeamplay::IsTeamplay( void )
+BOOL CHalfLifeTeamplay::IsTeamplay()
 {
 	return TRUE;
 }
@@ -517,7 +510,7 @@ BOOL CHalfLifeTeamplay::IsValidTeam( const char *pTeamName )
 	return ( GetTeamIndex( pTeamName ) != -1 ) ? TRUE : FALSE;
 }
 
-const char *CHalfLifeTeamplay::TeamWithFewestPlayers( void )
+const char *CHalfLifeTeamplay::TeamWithFewestPlayers()
 {
 	int i;
 	int minPlayers = MAX_TEAMS;

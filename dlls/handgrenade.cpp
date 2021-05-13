@@ -23,18 +23,6 @@
 
 #define	HANDGRENADE_PRIMARY_VOLUME		450
 
-enum handgrenade_e {
-	HANDGRENADE_IDLE = 0,
-	HANDGRENADE_FIDGET,
-	HANDGRENADE_PINPULL,
-	HANDGRENADE_THROW1,	// toss
-	HANDGRENADE_THROW2,	// medium
-	HANDGRENADE_THROW3,	// hard
-	HANDGRENADE_HOLSTER,
-	HANDGRENADE_DRAW
-};
-
-
 LINK_ENTITY_TO_CLASS( weapon_handgrenade, CHandGrenade );
 
 
@@ -54,7 +42,7 @@ void CHandGrenade::Spawn( )
 }
 
 
-void CHandGrenade::Precache( void )
+void CHandGrenade::Precache()
 {
 	PRECACHE_MODEL("models/w_grenade.mdl");
 	PRECACHE_MODEL("models/v_grenade.mdl");
@@ -85,7 +73,7 @@ BOOL CHandGrenade::Deploy( )
 	return DefaultDeploy( "models/v_grenade.mdl", "models/p_grenade.mdl", HANDGRENADE_DRAW, "crowbar" );
 }
 
-BOOL CHandGrenade::CanHolster( void )
+BOOL CHandGrenade::CanHolster()
 {
 	// can only holster hand grenades when not primed!
 	return ( m_flStartThrow == 0 );
@@ -123,7 +111,7 @@ void CHandGrenade::PrimaryAttack()
 }
 
 
-void CHandGrenade::WeaponIdle( void )
+void CHandGrenade::WeaponIdle()
 {
 	if ( m_flReleaseThrow == 0 && m_flStartThrow )
 		 m_flReleaseThrow = gpGlobals->time;
@@ -173,7 +161,7 @@ void CHandGrenade::WeaponIdle( void )
 		// player "shoot" animation
 		m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
-		m_flReleaseThrow = 0;
+		//m_flReleaseThrow = 0;
 		m_flStartThrow = 0;
 		m_flNextPrimaryAttack = GetNextAttackDelay(0.5);
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;

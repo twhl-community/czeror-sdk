@@ -60,7 +60,7 @@ cvar_t	*c_maxdistance;
 cvar_t	*c_mindistance;
 
 // pitch, yaw, dist
-vec3_t cam_ofs;
+Vector cam_ofs;
 
 
 // In third person
@@ -78,10 +78,10 @@ static kbutton_t cam_in, cam_out, cam_move;
 
 //-------------------------------------------------- Prototypes
 
-void CAM_ToThirdPerson(void);
-void CAM_ToFirstPerson(void);
-void CAM_StartDistance(void);
-void CAM_EndDistance(void);
+void CAM_ToThirdPerson();
+void CAM_ToFirstPerson();
+void CAM_StartDistance();
+void CAM_EndDistance();
 
 void SDL_GetCursorPos( POINT *p )
 {
@@ -138,9 +138,9 @@ float MoveToward( float cur, float goal, float maxspeed )
 
 typedef struct
 {
-	vec3_t		boxmins, boxmaxs;// enclose the test object along entire move
+	Vector		boxmins, boxmaxs;// enclose the test object along entire move
 	float		*mins, *maxs;	// size of the moving object
-	vec3_t		mins2, maxs2;	// size when clipping against mosnters
+	Vector		mins2, maxs2;	// size when clipping against mosnters
 	float		*start, *end;
 	trace_t		trace;
 	int			type;
@@ -148,22 +148,22 @@ typedef struct
 	qboolean	monsterclip;
 } moveclip_t;
 
-extern trace_t SV_ClipMoveToEntity (edict_t *ent, vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
+extern trace_t SV_ClipMoveToEntity (edict_t *ent, Vector start, Vector mins, Vector maxs, Vector end);
 
-void DLLEXPORT CAM_Think( void )
+void DLLEXPORT CAM_Think()
 {
 //	RecClCamThink();
 
-	vec3_t origin;
-	vec3_t ext, pnt, camForward, camRight, camUp;
+	Vector origin;
+	Vector ext, pnt, camForward, camRight, camUp;
 	moveclip_t	clip;
 	float dist;
-	vec3_t camAngles;
+	Vector camAngles;
 	float flSensitivity;
 #ifdef LATER
 	int i;
 #endif
-	vec3_t viewangles;
+	Vector viewangles;
 
 	switch( (int) cam_command->value )
 	{
@@ -416,22 +416,22 @@ void DLLEXPORT CAM_Think( void )
 extern void KeyDown (kbutton_t *b);	// HACK
 extern void KeyUp (kbutton_t *b);	// HACK
 
-void CAM_PitchUpDown(void) { KeyDown( &cam_pitchup ); }
-void CAM_PitchUpUp(void) { KeyUp( &cam_pitchup ); }
-void CAM_PitchDownDown(void) { KeyDown( &cam_pitchdown ); }
-void CAM_PitchDownUp(void) { KeyUp( &cam_pitchdown ); }
-void CAM_YawLeftDown(void) { KeyDown( &cam_yawleft ); }
-void CAM_YawLeftUp(void) { KeyUp( &cam_yawleft ); }
-void CAM_YawRightDown(void) { KeyDown( &cam_yawright ); }
-void CAM_YawRightUp(void) { KeyUp( &cam_yawright ); }
-void CAM_InDown(void) { KeyDown( &cam_in ); }
-void CAM_InUp(void) { KeyUp( &cam_in ); }
-void CAM_OutDown(void) { KeyDown( &cam_out ); }
-void CAM_OutUp(void) { KeyUp( &cam_out ); }
+void CAM_PitchUpDown() { KeyDown( &cam_pitchup ); }
+void CAM_PitchUpUp() { KeyUp( &cam_pitchup ); }
+void CAM_PitchDownDown() { KeyDown( &cam_pitchdown ); }
+void CAM_PitchDownUp() { KeyUp( &cam_pitchdown ); }
+void CAM_YawLeftDown() { KeyDown( &cam_yawleft ); }
+void CAM_YawLeftUp() { KeyUp( &cam_yawleft ); }
+void CAM_YawRightDown() { KeyDown( &cam_yawright ); }
+void CAM_YawRightUp() { KeyUp( &cam_yawright ); }
+void CAM_InDown() { KeyDown( &cam_in ); }
+void CAM_InUp() { KeyUp( &cam_in ); }
+void CAM_OutDown() { KeyDown( &cam_out ); }
+void CAM_OutUp() { KeyUp( &cam_out ); }
 
-void CAM_ToThirdPerson(void)
+void CAM_ToThirdPerson()
 { 
-	vec3_t viewangles;
+	Vector viewangles;
 
 #if !defined( _DEBUG )
 	if ( gEngfuncs.GetMaxClients() > 1 )
@@ -455,19 +455,19 @@ void CAM_ToThirdPerson(void)
 	gEngfuncs.Cvar_SetValue( "cam_command", 0 );
 }
 
-void CAM_ToFirstPerson(void) 
+void CAM_ToFirstPerson() 
 { 
 	cam_thirdperson = 0;
 	
 	gEngfuncs.Cvar_SetValue( "cam_command", 0 );
 }
 
-void CAM_ToggleSnapto( void )
+void CAM_ToggleSnapto()
 { 
 	cam_snapto->value = !cam_snapto->value;
 }
 
-void CAM_Init( void )
+void CAM_Init()
 {
 	gEngfuncs.pfnAddCommand( "+campitchup", CAM_PitchUpDown );
 	gEngfuncs.pfnAddCommand( "-campitchup", CAM_PitchUpUp );
@@ -504,9 +504,9 @@ void CAM_Init( void )
 	c_mindistance			= gEngfuncs.pfnRegisterVariable ( "c_mindistance",   "30.0", 0 );
 }
 
-void CAM_ClearStates( void )
+void CAM_ClearStates()
 {
-	vec3_t viewangles;
+	Vector viewangles;
 
 	gEngfuncs.GetViewAngles( (float *)viewangles );
 
@@ -533,7 +533,7 @@ void CAM_ClearStates( void )
 	cam_idealdist->value = CAM_MIN_DIST;
 }
 
-void CAM_StartMouseMove(void)
+void CAM_StartMouseMove()
 {
 	float flSensitivity;
 		
@@ -570,7 +570,7 @@ void CAM_StartMouseMove(void)
 
 //the key has been released for camera movement
 //tell the engine that mouse camera movement is off
-void CAM_EndMouseMove(void)
+void CAM_EndMouseMove()
 {
    cam_mousemove=0;
    iMouseInUse=0;
@@ -581,7 +581,7 @@ void CAM_EndMouseMove(void)
 //routines to start the process of moving the cam in or out 
 //using the mouse
 //----------------------------------------------------------
-void CAM_StartDistance(void)
+void CAM_StartDistance()
 {
 	//only move the cam with mouse if we are in third person.
 	if (cam_thirdperson)
@@ -609,14 +609,14 @@ void CAM_StartDistance(void)
 
 //the key has been released for camera movement
 //tell the engine that mouse camera movement is off
-void CAM_EndDistance(void)
+void CAM_EndDistance()
 {
    cam_distancemove=0;
    cam_mousemove=0;
    iMouseInUse=0;
 }
 
-int DLLEXPORT CL_IsThirdPerson( void )
+int DLLEXPORT CL_IsThirdPerson()
 {
 //	RecClCL_IsThirdPerson();
 

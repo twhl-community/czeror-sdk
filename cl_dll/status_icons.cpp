@@ -27,7 +27,7 @@
 
 DECLARE_MESSAGE( m_StatusIcons, StatusIcon );
 
-int CHudStatusIcons::Init( void )
+int CHudStatusIcons::Init()
 {
 	HOOK_MESSAGE( StatusIcon );
 
@@ -38,13 +38,13 @@ int CHudStatusIcons::Init( void )
 	return 1;
 }
 
-int CHudStatusIcons::VidInit( void )
+int CHudStatusIcons::VidInit()
 {
 
 	return 1;
 }
 
-void CHudStatusIcons::Reset( void )
+void CHudStatusIcons::Reset()
 {
 	memset( m_IconList, 0, sizeof m_IconList );
 	m_iFlags &= ~HUD_ACTIVE;
@@ -104,7 +104,7 @@ int CHudStatusIcons::MsgFunc_StatusIcon( const char *pszName, int iSize, void *p
 }
 
 // add the icon to the icon list, and set it's drawing color
-void CHudStatusIcons::EnableIcon( char *pszIconName, unsigned char red, unsigned char green, unsigned char blue )
+void CHudStatusIcons::EnableIcon( const char *pszIconName, unsigned char red, unsigned char green, unsigned char blue )
 {
 	int i;
 	// check to see if the sprite is in the current list
@@ -148,7 +148,7 @@ void CHudStatusIcons::EnableIcon( char *pszIconName, unsigned char red, unsigned
 	}
 }
 
-void CHudStatusIcons::DisableIcon( char *pszIconName )
+void CHudStatusIcons::DisableIcon( const char *pszIconName )
 {
 	// find the sprite is in the current list
 	for ( int i = 0; i < MAX_ICONSPRITES; i++ )

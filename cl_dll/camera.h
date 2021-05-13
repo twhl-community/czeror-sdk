@@ -9,16 +9,16 @@
 // NOTE: must include quakedef.h first
 
 #ifndef _CAMERA_H_
-#define _CAMEA_H_
+#define _CAMERA_H_
 
 // pitch, yaw, dist
-extern vec3_t cam_ofs;
+extern Vector cam_ofs;
 // Using third person camera
 extern int cam_thirdperson;
 
-void CAM_Init( void );
-void CAM_ClearStates( void );
-void CAM_StartMouseMove(void);
-void CAM_EndMouseMove(void);
+void CAM_Init();
+void CAM_ClearStates();
+void CAM_StartMouseMove();
+void CAM_EndMouseMove();
 
 #endif		// _CAMERA_H_

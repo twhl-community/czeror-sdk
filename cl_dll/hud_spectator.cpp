@@ -39,10 +39,10 @@ extern void V_ResetChaseCam();
 extern void V_GetChasePos(int target, float * cl_angles, float * origin, float * angles);
 extern float * GetClientColor( int clientIndex );
 
-extern vec3_t v_origin;		// last view origin
-extern vec3_t v_angles;		// last view angle
-extern vec3_t v_cl_angles;	// last client/mouse angle
-extern vec3_t v_sim_org;	// last sim origin
+extern Vector v_origin;		// last view origin
+extern Vector v_angles;		// last view angle
+extern Vector v_cl_angles;	// last client/mouse angle
+extern Vector v_sim_org;	// last sim origin
 
 #if 0 
 const char *GetSpectatorLabel ( int iMode )
@@ -75,7 +75,7 @@ const char *GetSpectatorLabel ( int iMode )
 
 #endif
 
-void SpectatorMode(void)
+void SpectatorMode()
 {
 
 
@@ -92,9 +92,9 @@ void SpectatorMode(void)
 		gHUD.m_Spectator.SetModes( atoi( gEngfuncs.Cmd_Argv(1) ), atoi( gEngfuncs.Cmd_Argv(2) )  );	
 }
 
-void SpectatorSpray(void)
+void SpectatorSpray()
 {
-	vec3_t forward;
+	Vector forward;
 	char string[128];
 
 	if ( !gEngfuncs.IsSpectateOnly() )
@@ -103,7 +103,7 @@ void SpectatorSpray(void)
 	AngleVectors(v_angles,forward,NULL,NULL);
 	VectorScale(forward, 128, forward);
 	VectorAdd(forward, v_origin, forward);
-	pmtrace_t * trace = gEngfuncs.PM_TraceLine( v_origin, forward, PM_TRACELINE_PHYSENTSONLY, 2, -1 );
+    pmtrace_t * trace = gEngfuncs.PM_TraceLine( v_origin, forward, PM_TRACELINE_PHYSENTSONLY, 2, -1 );
 	if ( trace->fraction != 1.0 )
 	{
 		sprintf(string, "drc_spray %.2f %.2f %.2f %i", 
@@ -112,7 +112,7 @@ void SpectatorSpray(void)
 	}
 
 }
-void SpectatorHelp(void)
+void SpectatorHelp()
 {
 	if ( gViewPort )
 	{
@@ -134,7 +134,7 @@ void SpectatorHelp(void)
 	}
 }
 
-void SpectatorMenu( void )
+void SpectatorMenu()
 {
 	if ( gEngfuncs.Cmd_Argc() <= 1 )
 	{
@@ -145,7 +145,7 @@ void SpectatorMenu( void )
 	gViewPort->m_pSpectatorPanel->ShowMenu( atoi( gEngfuncs.Cmd_Argv(1))!=0  );
 }
 
-void ToggleScores( void )
+void ToggleScores()
 {
 	if ( gViewPort )
 	{
@@ -232,7 +232,7 @@ void UTIL_StringToVector( float * pVector, const char *pString )
 	}
 }
 
-int UTIL_FindEntityInMap(char * name, float * origin, float * angle)
+int UTIL_FindEntityInMap(const char * name, float * origin, float * angle)
 {
 	int				n,found = 0;
 	char			keyname[256];
@@ -278,9 +278,9 @@ int UTIL_FindEntityInMap(char * name, float * origin, float * angle)
 			{	
 				gEngfuncs.Con_DPrintf("UTIL_FindEntityInMap: EOF without closing brace\n");
 				return 0;
-			};
-			
-			strcpy (keyname, token);
+			}
+
+            strcpy (keyname, token);
 
 			// another hack to fix keynames with trailing spaces
 			n = strlen(keyname);
@@ -296,9 +296,9 @@ int UTIL_FindEntityInMap(char * name, float * origin, float * angle)
 			{	
 				gEngfuncs.Con_DPrintf("UTIL_FindEntityInMap: EOF without closing brace\n");
 				return 0;
-			};
-	
-			if (token[0] == '}')
+			}
+
+            if (token[0] == '}')
 			{
 				gEngfuncs.Con_DPrintf("UTIL_FindEntityInMap: closing brace without data");
 				return 0;
@@ -310,9 +310,9 @@ int UTIL_FindEntityInMap(char * name, float * origin, float * angle)
 				{
 					found = 1;	// thats our entity
 				}
-			};
+			}
 
-			if( !strcmp( keyname, "angle" ) )
+            if( !strcmp( keyname, "angle" ) )
 			{
 				float y = atof( token );
 				
@@ -324,8 +324,8 @@ int UTIL_FindEntityInMap(char * name, float * origin, float * angle)
 				else if ((int)y == -1)
 				{
 					angle[0] = -90.0f;
-					angle[1] =   0.0f;;
-				}
+					angle[1] =   0.0f;
+                }
 				else
 				{
 					angle[0] = 90.0f;
@@ -344,9 +344,8 @@ int UTIL_FindEntityInMap(char * name, float * origin, float * angle)
 			{
 				UTIL_StringToVector(origin, token);
 
-			};
-				
-		} // while (1)
+			}
+        } // while (1)
 
 		if (found)
 			return 1;
@@ -381,25 +380,25 @@ void CHudSpectator::SetSpectatorStartPosition()
 		// jump to 0,0,0 if no better position was found
 		VectorCopy(vec3_origin, m_cameraOrigin);
 		VectorCopy(vec3_origin, m_cameraAngles);
-	}
+    }
 	
 	VectorCopy(m_cameraOrigin, vJumpOrigin);
 	VectorCopy(m_cameraAngles, vJumpAngles);
 
-	iJumpSpectator = 1;	// jump anyway
+    iJumpSpectator = 1;	// jump anyway
 }
 
 
-void CHudSpectator::SetCameraView( vec3_t pos, vec3_t angle, float fov)
+void CHudSpectator::SetCameraView(Vector pos, Vector angle, float fov)
 {
 	m_FOV = fov;
 	VectorCopy(pos, vJumpOrigin);
 	VectorCopy(angle, vJumpAngles);
-	gEngfuncs.SetViewAngles( vJumpAngles );
+    gEngfuncs.SetViewAngles( vJumpAngles );
 	iJumpSpectator = 1;	// jump anyway
 }
 
-void CHudSpectator::AddWaypoint( float time, vec3_t pos, vec3_t angle, float fov, int flags )
+void CHudSpectator::AddWaypoint( float time, Vector pos, Vector angle, float fov, int flags )
 {
 	if ( !flags == 0 && time == 0.0f)
 	{
@@ -416,7 +415,7 @@ void CHudSpectator::AddWaypoint( float time, vec3_t pos, vec3_t angle, float fov
 
 	VectorCopy( angle, m_CamPath[ m_NumWayPoints ].angle );
 	VectorCopy( pos, m_CamPath[ m_NumWayPoints ].position );
-	m_CamPath[ m_NumWayPoints ].flags = flags;
+    m_CamPath[ m_NumWayPoints ].flags = flags;
 	m_CamPath[ m_NumWayPoints ].fov = fov;
 	m_CamPath[ m_NumWayPoints ].time = time;
 
@@ -452,7 +451,7 @@ void CHudSpectator::SetWayInterpolation(cameraWayPoint_t * prev, cameraWayPoint_
 	}
 }
 
-bool CHudSpectator::GetDirectorCamera(vec3_t &position, vec3_t &angle)
+bool CHudSpectator::GetDirectorCamera(Vector&position, Vector&angle)
 {
 	float now = gHUD.m_flTime;
 	float fov = 90.0f;
@@ -463,21 +462,21 @@ bool CHudSpectator::GetDirectorCamera(vec3_t &position, vec3_t &angle)
 		
 		if ( ent )
 		{
-			vec3_t vt = ent->curstate.origin;
+			Vector vt = ent->curstate.origin;
 		
 			if ( m_ChaseEntity <= gEngfuncs.GetMaxClients() )
 			{			
 				if ( ent->curstate.solid == SOLID_NOT )
 				{
-					vt[2]+= -8 ; // PM_DEAD_VIEWHEIGHT
+					vt = vt + VEC_DEAD_VIEW;
 				}
 				else if (ent->curstate.usehull == 1 )
 				{
-					vt[2]+= 12; // VEC_DUCK_VIEW;
+					vt = vt + VEC_DUCK_VIEW;
 				}
 				else
 				{
-					vt[2]+= 28; // DEFAULT_VIEWHEIGHT
+					vt = vt + VEC_VIEW;
 				}
 			}
 			
@@ -625,7 +624,7 @@ int CHudSpectator::Draw(float flTime)
 	// if user moves in map mode, change map origin
 	if ( (m_moveDelta != 0.0f) && (g_iUser1 != OBS_ROAMING) )
 	{
-		vec3_t	right;
+		Vector	right;
 		AngleVectors(v_angles, NULL, right, NULL);
 		VectorNormalize(right);
 		VectorScale(right, m_moveDelta, right );
@@ -682,7 +681,7 @@ void CHudSpectator::DirectorMessage( int iSize, void *pbuf )
 {
 	float	f1,f2;
 	char *	string;
-	vec3_t	v1,v2;
+	Vector	v1,v2;
 	int		i1,i2,i3;
 
 	BEGIN_READ( pbuf, iSize );
@@ -942,13 +941,13 @@ void CHudSpectator::FindNextPlayer(bool bReverse)
 		// take save camera position 
 		VectorCopy(m_cameraOrigin, vJumpOrigin);
 		VectorCopy(m_cameraAngles, vJumpAngles);
-	}
+    }
 	else
 	{
 		// use new entity position for roaming
 		VectorCopy ( pEnt->origin, vJumpOrigin );
 		VectorCopy ( pEnt->angles, vJumpAngles );
-	}
+    }
 
 	iJumpSpectator = 1;
 	gViewPort->MsgFunc_ResetFade( NULL, 0, NULL );
@@ -1000,13 +999,13 @@ void CHudSpectator::FindPlayer(const char *name)
 		// take save camera position 
 		VectorCopy(m_cameraOrigin, vJumpOrigin);
 		VectorCopy(m_cameraAngles, vJumpAngles);
-	}
+    }
 	else
 	{
 		// use new entity position for roaming
 		VectorCopy ( pEnt->origin, vJumpOrigin );
 		VectorCopy ( pEnt->angles, vJumpAngles );
-	}
+    }
 
 	iJumpSpectator = 1;
 	gViewPort->MsgFunc_ResetFade( NULL, 0, NULL );
@@ -1547,7 +1546,7 @@ void CHudSpectator::DrawOverviewEntities()
 {
 	int				i,ir,ig,ib;
 	struct model_s *hSpriteModel;
-	vec3_t			origin, angles, point, forward, right, left, up, world, screen, offset;
+	Vector			origin, angles, point, forward, right, left, up, world, screen, offset;
 	float			x,y,z, r,g,b, sizeScale = 4.0f;
 	cl_entity_t *	ent;
 	float rmatrix[3][4];	// transformation matrix
@@ -1586,7 +1585,7 @@ void CHudSpectator::DrawOverviewEntities()
 
 		VectorCopy(ent->origin,origin);
 
-		gEngfuncs.pTriAPI->Begin( TRI_QUADS );
+        gEngfuncs.pTriAPI->Begin( TRI_QUADS );
 
 		gEngfuncs.pTriAPI->Color4f( 1.0, 1.0, 1.0, 1.0 );
 		
@@ -1672,7 +1671,7 @@ void CHudSpectator::DrawOverviewEntities()
 			
 		VectorSubtract(offset, screen, offset );
 
-		int playerNum = ent->index - 1;
+        int playerNum = ent->index - 1;
 
 		m_vPlayerPos[playerNum][0] = screen[0];	
 		m_vPlayerPos[playerNum][1] = screen[1] + Length(offset);	
@@ -1696,7 +1695,7 @@ void CHudSpectator::DrawOverviewEntities()
 	{
 		VectorCopy( v_sim_org, origin );
 		VectorCopy( v_cl_angles, angles );
-	}
+    }
 	else
 		V_GetChasePos( g_iUser2, NULL, origin, angles );
 

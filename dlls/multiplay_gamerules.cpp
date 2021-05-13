@@ -27,6 +27,7 @@
 #include	"items.h"
 #include	"voice_gamemgr.h"
 #include	"hltv.h"
+#include "UserMessages.h"
 
 #if !defined ( _WIN32 )
 #include <ctype.h>
@@ -34,10 +35,6 @@
 
 extern DLL_GLOBAL CGameRules	*g_pGameRules;
 extern DLL_GLOBAL BOOL	g_fGameOver;
-extern int gmsgDeathMsg;	// client dll messages
-extern int gmsgScoreInfo;
-extern int gmsgMOTD;
-extern int gmsgServerName;
 
 extern int g_teamplay;
 
@@ -52,7 +49,7 @@ CVoiceGameMgr	g_VoiceGameMgr;
 class CMultiplayGameMgrHelper : public IVoiceGameMgrHelper
 {
 public:
-	virtual bool		CanPlayerHearPlayer(CBasePlayer *pListener, CBasePlayer *pTalker)
+	bool		CanPlayerHearPlayer(CBasePlayer *pListener, CBasePlayer *pTalker) override
 	{
 		if ( g_teamplay )
 		{
@@ -116,9 +113,14 @@ BOOL CHalfLifeMultiplay::ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
 	return CGameRules::ClientCommand(pPlayer, pcmd);
 }
 
+void CHalfLifeMultiplay::ClientUserInfoChanged(CBasePlayer* pPlayer, char* infobuffer)
+{
+	pPlayer->SetPrefsFromUserinfo(infobuffer);
+}
+
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay::RefreshSkillData( void )
+void CHalfLifeMultiplay::RefreshSkillData()
 {
 // load all default values
 	CGameRules::RefreshSkillData();
@@ -178,7 +180,7 @@ extern cvar_t mp_chattime;
 
 //=========================================================
 //=========================================================
-void CHalfLifeMultiplay :: Think ( void )
+void CHalfLifeMultiplay :: Think ()
 {
 	g_VoiceGameMgr.Update(gpGlobals->frametime);
 
@@ -271,21 +273,21 @@ void CHalfLifeMultiplay :: Think ( void )
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::IsMultiplayer( void )
+BOOL CHalfLifeMultiplay::IsMultiplayer()
 {
 	return TRUE;
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::IsDeathmatch( void )
+BOOL CHalfLifeMultiplay::IsDeathmatch()
 {
 	return TRUE;
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay::IsCoOp( void )
+BOOL CHalfLifeMultiplay::IsCoOp()
 {
 	return gpGlobals->coop;
 }
@@ -309,6 +311,18 @@ BOOL CHalfLifeMultiplay::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBasePlayerI
 	if ( !pPlayer->m_pActiveItem->CanHolster() )
 	{
 		// can't put away the active item.
+		return FALSE;
+	}
+
+	//Never switch
+	if (pPlayer->m_iAutoWepSwitch == 0)
+	{
+		return FALSE;
+	}
+
+	//Only switch if not attacking
+	if (pPlayer->m_iAutoWepSwitch == 2 && (pPlayer->m_afButtonLast & (IN_ATTACK | IN_ATTACK2)))
+	{
 		return FALSE;
 	}
 
@@ -394,9 +408,6 @@ BOOL CHalfLifeMultiplay :: ClientConnected( edict_t *pEntity, const char *pszNam
 	g_VoiceGameMgr.ClientConnected(pEntity);
 	return TRUE;
 }
-
-extern int gmsgSayText;
-extern int gmsgGameMode;
 
 void CHalfLifeMultiplay :: UpdateGameMode( CBasePlayer *pPlayer )
 {
@@ -553,6 +564,10 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 	BOOL		addDefault;
 	CBaseEntity	*pWeaponEntity = NULL;
 
+	//Ensure the player switches to the Glock on spawn regardless of setting
+	const int originalAutoWepSwitch = pPlayer->m_iAutoWepSwitch;
+	pPlayer->m_iAutoWepSwitch = 1;
+
 	pPlayer->pev->weapons |= (1<<WEAPON_SUIT);
 	
 	addDefault = TRUE;
@@ -569,6 +584,8 @@ void CHalfLifeMultiplay :: PlayerSpawn( CBasePlayer *pPlayer )
 		pPlayer->GiveNamedItem( "weapon_9mmhandgun" );
 		pPlayer->GiveAmmo( 68, "9mm", _9MM_MAX_CARRY );// 4 full reloads
 	}
+
+	pPlayer->m_iAutoWepSwitch = originalAutoWepSwitch;
 }
 
 //=========================================================
@@ -585,7 +602,7 @@ float CHalfLifeMultiplay :: FlPlayerSpawnTime( CBasePlayer *pPlayer )
 	return gpGlobals->time;//now!
 }
 
-BOOL CHalfLifeMultiplay :: AllowAutoTargetCrosshair( void )
+BOOL CHalfLifeMultiplay :: AllowAutoTargetCrosshair()
 {
 	return ( aimcrosshair.value != 0 );
 }
@@ -679,8 +696,8 @@ void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, 
 	int killer_index = 0;
 	
 	// Hack to fix name change
-	char *tau = "tau_cannon";
-	char *gluon = "gluon gun";
+	const char *tau = "tau_cannon";
+	const char *gluon = "gluon gun";
 
 	if ( pKiller->flags & FL_CLIENT )
 	{
@@ -1059,13 +1076,13 @@ Vector CHalfLifeMultiplay::VecAmmoRespawnSpot( CBasePlayerAmmo *pAmmo )
 
 //=========================================================
 //=========================================================
-float CHalfLifeMultiplay::FlHealthChargerRechargeTime( void )
+float CHalfLifeMultiplay::FlHealthChargerRechargeTime()
 {
 	return 60;
 }
 
 
-float CHalfLifeMultiplay::FlHEVChargerRechargeTime( void )
+float CHalfLifeMultiplay::FlHEVChargerRechargeTime()
 {
 	return 30;
 }
@@ -1115,14 +1132,14 @@ BOOL CHalfLifeMultiplay :: PlayFootstepSounds( CBasePlayer *pl, float fvol )
 	return FALSE;
 }
 
-BOOL CHalfLifeMultiplay :: FAllowFlashlight( void ) 
+BOOL CHalfLifeMultiplay :: FAllowFlashlight() 
 { 
 	return flashlight.value != 0; 
 }
 
 //=========================================================
 //=========================================================
-BOOL CHalfLifeMultiplay :: FAllowMonsters( void )
+BOOL CHalfLifeMultiplay :: FAllowMonsters()
 {
 	return ( allowmonsters.value != 0 );
 }
@@ -1131,7 +1148,7 @@ BOOL CHalfLifeMultiplay :: FAllowMonsters( void )
 //======== CHalfLifeMultiplay private functions ===========
 #define INTERMISSION_TIME		6
 
-void CHalfLifeMultiplay :: GoToIntermission( void )
+void CHalfLifeMultiplay :: GoToIntermission()
 {
 	if ( g_fGameOver )
 		return;  // intermission has already been triggered, so ignore.
@@ -1436,7 +1453,7 @@ CountPlayers
 Determine the current # of active players on the server for map cycling logic
 ==============
 */
-int CountPlayers( void )
+int CountPlayers()
 {
 	int	num = 0;
 
@@ -1515,7 +1532,7 @@ ChangeLevel
 Server is changing to a new level, check mapcycle.txt for map name and setup info
 ==============
 */
-void CHalfLifeMultiplay :: ChangeLevel( void )
+void CHalfLifeMultiplay :: ChangeLevel()
 {
 	static char szPreviousMapCycleFile[ 256 ];
 	static mapcycle_t mapcycle;

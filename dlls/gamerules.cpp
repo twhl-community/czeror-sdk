@@ -25,13 +25,12 @@
 #include	"teamplay_gamerules.h"
 #include	"skill.h"
 #include	"game.h"
+#include "UserMessages.h"
 
 extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 
 DLL_GLOBAL CGameRules*	g_pGameRules = NULL;
 extern DLL_GLOBAL BOOL	g_fGameOver;
-extern int gmsgDeathMsg;	// client dll messages
-extern int gmsgMOTD;
 
 int g_teamplay = 0;
 
@@ -110,7 +109,7 @@ BOOL CGameRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBasePlayerItem *pWeap
 //=========================================================
 // load the SkillData struct with the proper values based on the skill level.
 //=========================================================
-void CGameRules::RefreshSkillData ( void )
+void CGameRules::RefreshSkillData ()
 {
 	int	iSkill;
 
@@ -274,12 +273,7 @@ void CGameRules::RefreshSkillData ( void )
 	gSkillData.monDmgHornet = GetSkillCvar( "sk_hornet_dmg");
 
 	// PLAYER HORNET
-// Up to this point, player hornet damage and monster hornet damage were both using
-// monDmgHornet to determine how much damage to do. In tuning the hivehand, we now need
-// to separate player damage and monster hivehand damage. Since it's so late in the project, we've
-// added plrDmgHornet to the SKILLDATA struct, but not to the engine CVar list, so it's inaccesible
-// via SKILLS.CFG. Any player hivehand tuning must take place in the code. (sjb)
-	gSkillData.plrDmgHornet = 7;
+	gSkillData.plrDmgHornet = GetSkillCvar("sk_plr_hornet_dmg");
 
 
 	// HEALTH/CHARGE
@@ -308,7 +302,7 @@ void CGameRules::RefreshSkillData ( void )
 // instantiate the proper game rules object
 //=========================================================
 
-CGameRules *InstallGameRules( void )
+CGameRules *InstallGameRules()
 {
 	SERVER_COMMAND( "exec game.cfg\n" );
 	SERVER_EXECUTE( );
