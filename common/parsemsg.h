@@ -18,12 +18,11 @@
 //  in this dll. (and C++ifying it)
 //
 
-#ifndef PARSEMSG_H
-#define PARSEMSG_H
+#pragma once
 
-#define ASSERT( x )
+#define ASSERT(x)
 //--------------------------------------------------------------------------------------------------------------
-void BEGIN_READ( void *buf, int size );
+void BEGIN_READ(void* buf, int size);
 int READ_CHAR();
 int READ_BYTE();
 int READ_SHORT();
@@ -34,33 +33,28 @@ char* READ_STRING();
 float READ_COORD();
 float READ_ANGLE();
 float READ_HIRESANGLE();
-int READ_OK();
+bool READ_OK();
 
 //--------------------------------------------------------------------------------------------------------------
 class BufferWriter
 {
 public:
 	BufferWriter();
-	BufferWriter( unsigned char *buffer, int bufferLen );
-	void Init( unsigned char *buffer, int bufferLen );
+	BufferWriter(unsigned char* buffer, int bufferLen);
+	void Init(unsigned char* buffer, int bufferLen);
 
-	void WriteByte( unsigned char data );
-	void WriteLong( int data );
-	void WriteString( const char *str );
+	void WriteByte(unsigned char data);
+	void WriteLong(int data);
+	void WriteString(const char* str);
 
 	bool HasOverflowed();
 	int GetSpaceUsed();
 
 protected:
-	unsigned char *m_buffer;
+	unsigned char* m_buffer;
 	int m_remaining;
 	bool m_overflow;
 	int m_overallLength;
 };
 
 //--------------------------------------------------------------------------------------------------------------
-
-#endif // PARSEMSG_H
-
-
-

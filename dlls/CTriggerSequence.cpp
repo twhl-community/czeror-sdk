@@ -23,47 +23,47 @@ class CTriggerSequence : public CBaseDelay
 public:
 	static const auto MAX_NAME_LENGTH = 255;
 
-	int Save( CSave &save ) override;
-	int Restore( CRestore &restore ) override;
+	bool Save(CSave& save) override;
+	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
 
 	CTriggerSequence();
 
 	int ObjectCaps() override { return CBaseDelay::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
-	void KeyValue( KeyValueData* pkvd ) override;
+	bool KeyValue(KeyValueData* pkvd) override;
 	void Precache() override;
 	void Spawn() override;
 
 	void Restart() override;
 
-	void Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value ) override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
 
 	void Think() override;
 
 	void GoToFirstCommand();
 
-	void AdvanceAndCheckForRepeat( int repeatCount );
+	void AdvanceAndCheckForRepeat(int repeatCount);
 
 	void FastForward();
 
 	void StopSequence();
 
-	void ExecuteFireTargets( char* fireTargetNames );
+	void ExecuteFireTargets(char* fireTargetNames);
 
-	void ExecuteKillTargets( char* killTargetNames );
+	void ExecuteKillTargets(char* killTargetNames);
 
-	void ExecuteTextMessage( client_textmessage_t* message, int textChannel );
+	void ExecuteTextMessage(client_textmessage_t* message, int textChannel);
 
-	void ExecuteSound( char* soundName );
+	void ExecuteSound(char* soundName);
 
-	void ExecuteSpeech( char* soundName, char* speakerName, char* listenerName, float duration );
+	void ExecuteSpeech(char* soundName, char* speakerName, char* listenerName, float duration);
 
-	void ExecuteSoundOrSpeech( char* soundName, char* speakerName, char* listenerName, float duration );
+	void ExecuteSoundOrSpeech(char* soundName, char* speakerName, char* listenerName, float duration);
 
-	void ExecuteSequenceCommand( sequenceCommandLine_s* command );
+	void ExecuteSequenceCommand(sequenceCommandLine_s* command);
 
-	char m_sequenceEntryName[ MAX_NAME_LENGTH + 1 ];
+	char m_sequenceEntryName[MAX_NAME_LENGTH + 1];
 	float m_sequenceStartTime;
 
 	sequenceEntry_s* m_sequenceEntry;
@@ -74,25 +74,25 @@ public:
 	USE_TYPE m_useType;
 	float m_value;
 
-	BOOL m_isBusy;
-	BOOL m_isDisabled;
-	BOOL m_fastForward;
+	bool m_isBusy;
+	bool m_isDisabled;
+	bool m_fastForward;
 };
 
-TYPEDESCRIPTION	CTriggerSequence::m_SaveData[] =
-{
-	DEFINE_ARRAY( CTriggerSequence, m_sequenceEntryName, FIELD_CHARACTER, CTriggerSequence::MAX_NAME_LENGTH + 1 ),
-	DEFINE_FIELD( CTriggerSequence, m_sequenceStartTime, FIELD_TIME ),
-	DEFINE_FIELD( CTriggerSequence, m_activator, FIELD_CLASSPTR ),
-	DEFINE_FIELD( CTriggerSequence, m_useType, FIELD_INTEGER ),
-	DEFINE_FIELD( CTriggerSequence, m_value, FIELD_FLOAT ),
-	DEFINE_FIELD( CTriggerSequence, m_isBusy, FIELD_BOOLEAN ),
-	DEFINE_FIELD( CTriggerSequence, m_isDisabled, FIELD_BOOLEAN ),
+TYPEDESCRIPTION CTriggerSequence::m_SaveData[] =
+	{
+		DEFINE_ARRAY(CTriggerSequence, m_sequenceEntryName, FIELD_CHARACTER, CTriggerSequence::MAX_NAME_LENGTH + 1),
+		DEFINE_FIELD(CTriggerSequence, m_sequenceStartTime, FIELD_TIME),
+		DEFINE_FIELD(CTriggerSequence, m_activator, FIELD_CLASSPTR),
+		DEFINE_FIELD(CTriggerSequence, m_useType, FIELD_INTEGER),
+		DEFINE_FIELD(CTriggerSequence, m_value, FIELD_FLOAT),
+		DEFINE_FIELD(CTriggerSequence, m_isBusy, FIELD_BOOLEAN),
+		DEFINE_FIELD(CTriggerSequence, m_isDisabled, FIELD_BOOLEAN),
 };
 
-IMPLEMENT_SAVERESTORE( CTriggerSequence, CBaseDelay );
+IMPLEMENT_SAVERESTORE(CTriggerSequence, CBaseDelay);
 
-LINK_ENTITY_TO_CLASS( trigger_sequence, CTriggerSequence );
+LINK_ENTITY_TO_CLASS(trigger_sequence, CTriggerSequence);
 
 CTriggerSequence::CTriggerSequence()
 {
@@ -109,30 +109,28 @@ CTriggerSequence::CTriggerSequence()
 	m_classtype = 0;
 	*/
 
-	m_sequenceEntryName[ 0 ] = '\0';
+	m_sequenceEntryName[0] = '\0';
 
 	m_isDisabled = false;
 	m_fastForward = false;
 }
 
-void CTriggerSequence::KeyValue( KeyValueData* pkvd )
+bool CTriggerSequence::KeyValue(KeyValueData* pkvd)
 {
-	if( !stricmp( pkvd->szKeyName, "sequence_id" ) )
+	if (!stricmp(pkvd->szKeyName, "sequence_id"))
 	{
-		const auto length = strlen( pkvd->szValue );
+		const auto length = strlen(pkvd->szValue);
 
-		if( length > MAX_NAME_LENGTH )
+		if (length > MAX_NAME_LENGTH)
 		{
-			ALERT( at_error, "Sequence entry label '%s' too long (was %d chars, max is %d)\n", pkvd->szValue, length, MAX_NAME_LENGTH );
+			ALERT(at_error, "Sequence entry label '%s' too long (was %d chars, max is %d)\n", pkvd->szValue, length, MAX_NAME_LENGTH);
 		}
 
-		strcpy( m_sequenceEntryName, pkvd->szValue );
-		pkvd->fHandled = true;
+		strcpy(m_sequenceEntryName, pkvd->szValue);
+		return true;
 	}
-	else
-	{
-		CBaseDelay::KeyValue( pkvd );
-	}
+
+	return CBaseDelay::KeyValue(pkvd);
 }
 
 void CTriggerSequence::Precache()
@@ -141,38 +139,38 @@ void CTriggerSequence::Precache()
 
 void CTriggerSequence::Spawn()
 {
-	m_sequenceEntry = g_engfuncs.pfnSequenceGet( nullptr, m_sequenceEntryName );
+	m_sequenceEntry = g_engfuncs.pfnSequenceGet(nullptr, m_sequenceEntryName);
 }
 
 void CTriggerSequence::Restart()
 {
 	m_nextCommand = nullptr;
-	m_sequenceEntry = g_engfuncs.pfnSequenceGet( nullptr, m_sequenceEntryName );
+	m_sequenceEntry = g_engfuncs.pfnSequenceGet(nullptr, m_sequenceEntryName);
 	m_fastForward = m_isBusy;
 }
 
-void CTriggerSequence::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value )
+void CTriggerSequence::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
-	if( !m_sequenceEntry )
+	if (!m_sequenceEntry)
 	{
 		StopSequence();
 
-		UTIL_LogPrintf( "CTriggerSequence: unknown sequence \"%s\"; must be specified \n", m_sequenceEntryName );
+		UTIL_LogPrintf("CTriggerSequence: unknown sequence \"%s\"; must be specified \n", m_sequenceEntryName);
 		return;
 	}
 
-	if( m_isDisabled )
+	if (m_isDisabled)
 	{
-		UTIL_LogPrintf( "CTriggerSequence: sequence \"%s\" is disabled, not firing.\n", m_sequenceEntryName );
+		UTIL_LogPrintf("CTriggerSequence: sequence \"%s\" is disabled, not firing.\n", m_sequenceEntryName);
 		return;
 	}
 
-	if( pev->spawnflags & SF_SEQUENCE_FIRE_ONCE )
+	if ((pev->spawnflags & SF_SEQUENCE_FIRE_ONCE) != 0)
 		m_isDisabled = true;
 
 	StopSequence();
 
-	if( m_sequenceEntry->firstCommand )
+	if (m_sequenceEntry->firstCommand)
 	{
 		m_value = value;
 		m_useType = useType;
@@ -187,13 +185,13 @@ void CTriggerSequence::Use( CBaseEntity* pActivator, CBaseEntity* pCaller, USE_T
 	}
 	else
 	{
-		UTIL_LogPrintf( "CTriggerSequence: sequence \"%s\" (in file \"%s\") was empty!\n", m_sequenceEntryName, m_sequenceEntry->fileName );
+		UTIL_LogPrintf("CTriggerSequence: sequence \"%s\" (in file \"%s\") was empty!\n", m_sequenceEntryName, m_sequenceEntry->fileName);
 	}
 }
 
 void CTriggerSequence::Think()
 {
-	if( m_fastForward )
+	if (m_fastForward)
 	{
 		FastForward();
 
@@ -202,17 +200,17 @@ void CTriggerSequence::Think()
 
 	auto timeNext = gpGlobals->time;
 
-	while( m_nextCommand )
+	while (m_nextCommand)
 	{
 		timeNext += m_nextCommand->delay;
 
-		ExecuteSequenceCommand( m_nextCommand );
+		ExecuteSequenceCommand(m_nextCommand);
 
-		if( gpGlobals->time < timeNext )
+		if (gpGlobals->time < timeNext)
 			break;
 	}
 
-	if( m_nextCommand && pev )
+	if (m_nextCommand && pev)
 	{
 		pev->nextthink = timeNext;
 	}
@@ -228,9 +226,9 @@ void CTriggerSequence::GoToFirstCommand()
 	m_nextCommand = m_sequenceEntry->firstCommand;
 }
 
-void CTriggerSequence::AdvanceAndCheckForRepeat( int repeatCount )
+void CTriggerSequence::AdvanceAndCheckForRepeat(int repeatCount)
 {
-	if( repeatCount )
+	if (0 != repeatCount)
 	{
 		GoToFirstCommand();
 	}
@@ -244,7 +242,7 @@ void CTriggerSequence::FastForward()
 {
 	m_nextCommand = m_sequenceEntry->firstCommand;
 
-	for( auto timeNext = m_sequenceStartTime; ( timeNext + 0.0001 ) < gpGlobals->time && m_nextCommand; )
+	for (auto timeNext = m_sequenceStartTime; (timeNext + 0.0001) < gpGlobals->time && m_nextCommand;)
 	{
 		timeNext += m_nextCommand->delay;
 
@@ -263,32 +261,32 @@ void CTriggerSequence::StopSequence()
 	m_isBusy = false;
 
 	//This method can be called before the entity has been initialized, so check this
-	if( pev )
+	if (pev)
 		pev->nextthink = 0;
 }
 
-void CTriggerSequence::ExecuteFireTargets( char* fireTargetNames )
+void CTriggerSequence::ExecuteFireTargets(char* fireTargetNames)
 {
-	if( fireTargetNames )
-		FireTargets( fireTargetNames, m_activator, this, m_useType, m_value );
+	if (fireTargetNames)
+		FireTargets(fireTargetNames, m_activator, this, m_useType, m_value);
 }
 
-void CTriggerSequence::ExecuteKillTargets( char* killTargetNames )
+void CTriggerSequence::ExecuteKillTargets(char* killTargetNames)
 {
-	if( killTargetNames )
+	if (killTargetNames)
 	{
-		for( CBaseEntity* pEntity = nullptr; ( pEntity = UTIL_FindEntityByTargetname( pEntity, killTargetNames ) ); )
+		for (CBaseEntity* pEntity = nullptr; (pEntity = UTIL_FindEntityByTargetname(pEntity, killTargetNames));)
 		{
 			pEntity->PreKillTarget();
 
-			UTIL_Remove( pEntity );
+			UTIL_Remove(pEntity);
 		}
 	}
 }
 
-void CTriggerSequence::ExecuteTextMessage( client_textmessage_t* message, int textChannel )
+void CTriggerSequence::ExecuteTextMessage(client_textmessage_t* message, int textChannel)
 {
-	if( message && message->pMessage )
+	if (message && message->pMessage)
 	{
 		hudtextparms_t hudTextParms;
 
@@ -309,63 +307,63 @@ void CTriggerSequence::ExecuteTextMessage( client_textmessage_t* message, int te
 		hudTextParms.fxTime = message->fxtime;
 		hudTextParms.channel = textChannel;
 
-		if( message->holdtime == -1 )
+		if (message->holdtime == -1)
 		{
-			hudTextParms.holdTime = ( strlen( message->pMessage ) * 0.05 ) + 1.0;
+			hudTextParms.holdTime = (strlen(message->pMessage) * 0.05) + 1.0;
 		}
 
-		UTIL_HudMessageAll( hudTextParms, message->pMessage );
+		UTIL_HudMessageAll(hudTextParms, message->pMessage);
 	}
 }
 
-void CTriggerSequence::ExecuteSound( char* soundName )
+void CTriggerSequence::ExecuteSound(char* soundName)
 {
-	if( soundName )
-		SENTENCEG_PlayRndSz( edict(), soundName, VOL_NORM, ATTN_NONE, 0, PITCH_NORM );
+	if (soundName)
+		SENTENCEG_PlayRndSz(edict(), soundName, VOL_NORM, ATTN_NONE, 0, PITCH_NORM);
 }
 
-void CTriggerSequence::ExecuteSpeech( char* soundName, char* speakerName, char* listenerName, float duration )
+void CTriggerSequence::ExecuteSpeech(char* soundName, char* speakerName, char* listenerName, float duration)
 {
-	if( speakerName && soundName )
+	if (speakerName && soundName)
 	{
-		auto pTarget = UTIL_FindEntityByTargetname( nullptr, speakerName );
+		auto pTarget = UTIL_FindEntityByTargetname(nullptr, speakerName);
 
-		if( pTarget )
+		if (pTarget)
 		{
 			auto pMonsterTarget = pTarget->MyMonsterPointer();
 
-			if( pMonsterTarget && pev )
+			if (pMonsterTarget && pev)
 			{
-				auto pListener = UTIL_FindEntityGeneric( listenerName, pev->origin, 4096 );
+				auto pListener = UTIL_FindEntityGeneric(listenerName, pev->origin, 4096);
 
-				pMonsterTarget->PlayScriptedSentence( soundName, duration, VOL_NORM, ATTN_NORM, true, pListener );
+				pMonsterTarget->PlayScriptedSentence(soundName, duration, VOL_NORM, ATTN_NORM, true, pListener);
 			}
 		}
 	}
 }
 
-void CTriggerSequence::ExecuteSoundOrSpeech( char* soundName, char* speakerName, char* listenerName, float duration )
+void CTriggerSequence::ExecuteSoundOrSpeech(char* soundName, char* speakerName, char* listenerName, float duration)
 {
-	if( soundName )
+	if (soundName)
 	{
-		if( speakerName && strcmp( "none", speakerName ) )
-			ExecuteSpeech( soundName, speakerName, listenerName, duration );
+		if (speakerName && 0 != strcmp("none", speakerName))
+			ExecuteSpeech(soundName, speakerName, listenerName, duration);
 		else
-			ExecuteSound( soundName );
+			ExecuteSound(soundName);
 	}
 }
 
-void CTriggerSequence::ExecuteSequenceCommand( sequenceCommandLine_s* command )
+void CTriggerSequence::ExecuteSequenceCommand(sequenceCommandLine_s* command)
 {
-	if( command )
+	if (command)
 	{
-		ExecuteFireTargets( command->fireTargetNames );
+		ExecuteFireTargets(command->fireTargetNames);
 
-		ExecuteKillTargets( command->killTargetNames );
-		ExecuteTextMessage( &command->clientMessage, command->textChannel );
+		ExecuteKillTargets(command->killTargetNames);
+		ExecuteTextMessage(&command->clientMessage, command->textChannel);
 
-		ExecuteSoundOrSpeech( command->soundFileName, command->speakerName, command->listenerName, command->delay );
+		ExecuteSoundOrSpeech(command->soundFileName, command->speakerName, command->listenerName, command->delay);
 
-		AdvanceAndCheckForRepeat( command->repeatCount );
+		AdvanceAndCheckForRepeat(command->repeatCount);
 	}
 }

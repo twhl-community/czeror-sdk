@@ -14,7 +14,9 @@
 ****/
 // Spectator.h
 
-class CBaseSpectator : public CBaseEntity 
+#pragma once
+
+class CBaseSpectator : public CBaseEntity
 {
 public:
 	void Spawn() override;

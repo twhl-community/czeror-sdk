@@ -28,13 +28,13 @@ class CTriggerChangeKeyValue : public CBaseDelay
 public:
 	int ObjectCaps() override { return 0; }
 
-	void KeyValue(KeyValueData* pkvd) override;
+	bool KeyValue(KeyValueData* pkvd) override;
 	void Spawn() override;
 
 	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
 
-	int Save(CSave& save) override;
-	int Restore(CRestore& restore) override;
+	bool Save(CSave& save) override;
+	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
 
 private:
@@ -46,30 +46,27 @@ private:
 
 LINK_ENTITY_TO_CLASS(trigger_changekeyvalue, CTriggerChangeKeyValue);
 
-TYPEDESCRIPTION	CTriggerChangeKeyValue::m_SaveData[] =
-{
-	DEFINE_FIELD(CTriggerChangeKeyValue, m_cTargets, FIELD_INTEGER),
-	DEFINE_ARRAY(CTriggerChangeKeyValue, m_iKey, FIELD_STRING, MAX_CHANGE_KEYVALUES),
-	DEFINE_ARRAY(CTriggerChangeKeyValue, m_iValue, FIELD_STRING, MAX_CHANGE_KEYVALUES),
-	DEFINE_FIELD(CTriggerChangeKeyValue, m_changeTargetName, FIELD_STRING),
+TYPEDESCRIPTION CTriggerChangeKeyValue::m_SaveData[] =
+	{
+		DEFINE_FIELD(CTriggerChangeKeyValue, m_cTargets, FIELD_INTEGER),
+		DEFINE_ARRAY(CTriggerChangeKeyValue, m_iKey, FIELD_STRING, MAX_CHANGE_KEYVALUES),
+		DEFINE_ARRAY(CTriggerChangeKeyValue, m_iValue, FIELD_STRING, MAX_CHANGE_KEYVALUES),
+		DEFINE_FIELD(CTriggerChangeKeyValue, m_changeTargetName, FIELD_STRING),
 };
 
 IMPLEMENT_SAVERESTORE(CTriggerChangeKeyValue, CBaseDelay);
 
-void CTriggerChangeKeyValue::KeyValue(KeyValueData* pkvd)
+bool CTriggerChangeKeyValue::KeyValue(KeyValueData* pkvd)
 {
 	//Make sure base class keys are handled properly
-	if (FStrEq("origin", pkvd->szKeyName)
-		|| FStrEq("target", pkvd->szKeyName)
-		|| FStrEq("targetname", pkvd->szKeyName)
-		|| FStrEq("classname", pkvd->szKeyName))
+	if (FStrEq("origin", pkvd->szKeyName) || FStrEq("target", pkvd->szKeyName) || FStrEq("targetname", pkvd->szKeyName) || FStrEq("classname", pkvd->szKeyName))
 	{
-		CBaseDelay::KeyValue(pkvd);
+		return CBaseDelay::KeyValue(pkvd);
 	}
 	else if (FStrEq("changetarget", pkvd->szKeyName))
 	{
 		m_changeTargetName = ALLOC_STRING(pkvd->szValue);
-		pkvd->fHandled = true;
+		return true;
 	}
 	//TODO: this was missing an else and caused "changetarget" to be added here
 	else if (m_cTargets < MAX_CHANGE_KEYVALUES)
@@ -82,8 +79,10 @@ void CTriggerChangeKeyValue::KeyValue(KeyValueData* pkvd)
 		UTIL_StripToken(pkvd->szValue, temp);
 		m_iValue[m_cTargets] = ALLOC_STRING(temp);
 
-		pkvd->fHandled = true;
+		return true;
 	}
+
+	return false;
 }
 
 void CTriggerChangeKeyValue::Spawn()

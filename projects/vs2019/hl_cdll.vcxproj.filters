@@ -46,9 +46,6 @@
     <Filter Include="Source Files\_hl\dlls">
       <UniqueIdentifier>{a2469e54-cb56-4161-b6b1-55c9d93676c1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\_hl\dlls\wpn_shared">
-      <UniqueIdentifier>{a46a0ff1-e7ad-43c4-afb8-6c93e71803a1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\_hl\cl_dll">
       <UniqueIdentifier>{5bff06ec-c232-4dd2-8642-4e2ce64f31ef}</UniqueIdentifier>
     </Filter>
@@ -57,6 +54,15 @@
     </Filter>
     <Filter Include="Header Files\engine">
       <UniqueIdentifier>{ebcb0f66-49b6-4e55-9a97-f6720cade9ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\public">
+      <UniqueIdentifier>{01f1d541-3bac-4b2c-9a83-2cadcb76ff8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\cl_dll\particleman">
+      <UniqueIdentifier>{b15eb5d8-7876-4b95-b327-88dc77c46466}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cl_dll\particleman">
+      <UniqueIdentifier>{7085339d-2b33-4cdf-846c-0e4c7d33add8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -90,8 +96,8 @@
     <ClCompile Include="..\..\cl_dll\hl\hl_objects.cpp">
       <Filter>Source Files\_hl\cl_dll\hl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\dlls\wpn_shared\hl_wpn_glock.cpp">
-      <Filter>Source Files\_hl\dlls\wpn_shared</Filter>
+    <ClCompile Include="..\..\dlls\glock.cpp">
+      <Filter>Source Files\_hl\dlls</Filter>
     </ClCompile>
     <ClCompile Include="..\..\dlls\squeakgrenade.cpp">
       <Filter>Source Files\_hl\dlls</Filter>
@@ -166,12 +172,6 @@
       <Filter>Source Files\cl_dll</Filter>
     </ClCompile>
     <ClCompile Include="..\..\cl_dll\hud.cpp">
-      <Filter>Source Files\cl_dll</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\cl_dll\hud_bench.cpp">
-      <Filter>Source Files\cl_dll</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\cl_dll\hud_benchtrace.cpp">
       <Filter>Source Files\cl_dll</Filter>
     </ClCompile>
     <ClCompile Include="..\..\cl_dll\hud_msg.cpp">
@@ -306,6 +306,21 @@
     <ClCompile Include="..\..\dlls\weapons_shared.cpp">
       <Filter>Source Files\_hl\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\game_shared\filesystem_utils.cpp">
+      <Filter>Source Files\game_shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\particleman\CMiniMem.cpp">
+      <Filter>Source Files\cl_dll\particleman</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\particleman\IParticleMan_Active.cpp">
+      <Filter>Source Files\cl_dll\particleman</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\particleman\CFrustum.cpp">
+      <Filter>Source Files\cl_dll\particleman</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\particleman\CBaseParticle.cpp">
+      <Filter>Source Files\cl_dll\particleman</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\cl_dll\kbutton.h">
@@ -404,9 +419,6 @@
     <ClInclude Include="..\..\game_shared\voice_banmgr.h">
       <Filter>Header Files\game_shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\cl_dll\wrect.h">
-      <Filter>Header Files\cl_dll</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\cl_dll\vgui_SpectatorPanel.h">
       <Filter>Header Files\cl_dll</Filter>
     </ClInclude>
@@ -497,9 +509,6 @@
     <ClInclude Include="..\..\common\in_buttons.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\interface.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\common\ivoicetweak.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
@@ -509,16 +518,10 @@
     <ClInclude Include="..\..\common\netadr.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\nowin.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\common\particledef.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\pmtrace.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\common\port.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\qfont.h">
@@ -551,12 +554,6 @@
     <ClInclude Include="..\..\common\weaponinfo.h">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\winsani_in.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\common\winsani_out.h">
-      <Filter>Header Files\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\engine\edict.h">
       <Filter>Header Files\engine</Filter>
     </ClInclude>
@@ -569,8 +566,35 @@
     <ClInclude Include="..\..\engine\progs.h">
       <Filter>Header Files\engine</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\..\lib\public\game_controls.lib" />
+    <ClInclude Include="..\..\common\common_types.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\game_shared\filesystem_utils.h">
+      <Filter>Header Files\game_shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\interface.h">
+      <Filter>Header Files\public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\PlatformHeaders.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\particleman\particleman_internal.h">
+      <Filter>Header Files\cl_dll\particleman</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\particleman\CFrustum.h">
+      <Filter>Header Files\cl_dll\particleman</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\particleman\IParticleMan_Active.h">
+      <Filter>Header Files\cl_dll\particleman</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\particleman\particleman.h">
+      <Filter>Header Files\cl_dll\particleman</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\particleman\CMiniMem.h">
+      <Filter>Header Files\cl_dll\particleman</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\particleman\CBaseParticle.h">
+      <Filter>Header Files\cl_dll\particleman</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
