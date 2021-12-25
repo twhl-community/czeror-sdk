@@ -29,6 +29,7 @@
 #include "common_types.h"
 #include "cl_dll.h"
 #include "ammo.h"
+#include "custom.h"
 
 #define DHN_DRAWZERO 1
 #define DHN_2DIGITS 2
@@ -491,6 +492,9 @@ private:
 	int m_iSpriteCountAllRes;
 	float m_flMouseSensitivity;
 	int m_iConcussionEffect;
+
+	float m_flMaterialCheckTime;
+	char m_szLastBSP[MAX_QPATH];
 
 public:
 	HSPRITE m_hsprCursor;

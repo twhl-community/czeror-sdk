@@ -20,6 +20,8 @@
 
 #include "vgui_TeamFortressViewport.h"
 
+#include "materials/CMaterialSystem.h"
+
 #define MAX_LOGO_FRAMES 56
 
 int grgLogoFrame[MAX_LOGO_FRAMES] =
@@ -84,6 +86,22 @@ void CHud::Think()
 	if (0 != gEngfuncs.IsSpectateOnly())
 	{
 		m_iFOV = gHUD.m_Spectator.GetFOV(); // default_fov->value;
+	}
+
+	if (auto mapName = gEngfuncs.pfnGetLevelName(); m_flMaterialCheckTime != 0 && m_flMaterialCheckTime < m_flTime && '\0' != mapName[0])
+	{
+		if (0 != strcmp(mapName, m_szLastBSP))
+		{
+			strncpy(m_szLastBSP, mapName, sizeof(m_szLastBSP) - 1);
+			m_szLastBSP[sizeof(m_szLastBSP) - 1] = '\0';
+
+			LoadLevelMaterials();
+
+			//TODO:
+			//g_Environment.SetupGrass();
+		}
+
+		m_flMaterialCheckTime = 0;
 	}
 }
 

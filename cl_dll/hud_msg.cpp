@@ -66,6 +66,8 @@ void CHud::MsgFunc_ViewMode(const char* pszName, int iSize, void* pbuf)
 
 void CHud::MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf)
 {
+	m_flMaterialCheckTime = 0.1;
+
 	// prepare all hud data
 	HUDLIST* pList = m_pHudList;
 
