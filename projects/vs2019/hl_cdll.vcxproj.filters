@@ -63,6 +63,12 @@
     </Filter>
     <Filter Include="Source Files\cl_dll\particleman">
       <UniqueIdentifier>{7085339d-2b33-4cdf-846c-0e4c7d33add8}</UniqueIdentifier>
+	</Filter>
+    <Filter Include="Header Files\materials">
+      <UniqueIdentifier>{19b88588-5f3b-4865-83c7-894552ae953b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\materials">
+      <UniqueIdentifier>{dfacb6b8-67f7-4002-91d5-a9db7bce3841}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -320,6 +326,15 @@
     </ClCompile>
     <ClCompile Include="..\..\cl_dll\particleman\CBaseParticle.cpp">
       <Filter>Source Files\cl_dll\particleman</Filter>
+	</ClCompile>
+    <ClCompile Include="..\..\cl_dll\materials\CMaterialSystem.cpp">
+      <Filter>Source Files\materials</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\materials\CMaterialFIO.cpp">
+      <Filter>Source Files\materials</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cl_dll\materials\Materials.cpp">
+      <Filter>Source Files\materials</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -595,6 +610,18 @@
     </ClInclude>
     <ClInclude Include="..\..\cl_dll\particleman\CBaseParticle.h">
       <Filter>Header Files\cl_dll\particleman</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\materials\CMaterialSystem.h">
+      <Filter>Header Files\materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\materials\CMaterial.h">
+      <Filter>Header Files\materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\materials\CMaterialFIO.h">
+      <Filter>Header Files\materials</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cl_dll\materials\Materials.h">
+      <Filter>Header Files\materials</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

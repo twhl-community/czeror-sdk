@@ -142,6 +142,9 @@
     <ClCompile Include="..\..\cl_dll\inputw32.cpp" />
     <ClCompile Include="..\..\cl_dll\interpolation.cpp" />
     <ClCompile Include="..\..\cl_dll\in_camera.cpp" />
+    <ClCompile Include="..\..\cl_dll\materials\CMaterialFIO.cpp" />
+    <ClCompile Include="..\..\cl_dll\materials\CMaterialSystem.cpp" />
+    <ClCompile Include="..\..\cl_dll\materials\Materials.cpp" />
     <ClCompile Include="..\..\cl_dll\menu.cpp" />
     <ClCompile Include="..\..\cl_dll\message.cpp" />
     <ClCompile Include="..\..\cl_dll\particleman\CBaseParticle.cpp" />
@@ -222,6 +225,10 @@
     <ClInclude Include="..\..\cl_dll\particleman\particleman.h" />
     <ClInclude Include="..\..\cl_dll\particleman\particleman_internal.h" />
     <ClInclude Include="..\..\cl_dll\particleman\CMiniMem.h" />
+    <ClInclude Include="..\..\cl_dll\materials\CMaterial.h" />
+    <ClInclude Include="..\..\cl_dll\materials\CMaterialFIO.h" />
+    <ClInclude Include="..\..\cl_dll\materials\CMaterialSystem.h" />
+    <ClInclude Include="..\..\cl_dll\materials\Materials.h" />
     <ClInclude Include="..\..\cl_dll\StudioModelRenderer.h" />
     <ClInclude Include="..\..\cl_dll\tri.h" />
     <ClInclude Include="..\..\cl_dll\vgui_int.h" />

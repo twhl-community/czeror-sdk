@@ -30,6 +30,9 @@
 #include "demo_api.h"
 #include "vgui_ScorePanel.h"
 
+#include "materials/CMaterialFIO.h"
+#include "materials/CMaterialSystem.h"
+
 hud_player_info_t g_PlayerInfoList[MAX_PLAYERS_HUD + 1];	// player info from the engine
 extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1]; // additional player info sent directly to the client dll
 
@@ -331,6 +334,8 @@ void CHud::Init()
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);
 	m_pCvarDraw = CVAR_CREATE("hud_draw", "1", FCVAR_ARCHIVE);
 	cl_lw = gEngfuncs.pfnGetCvarPointer("cl_lw");
+	mat_writerrorfile = gEngfuncs.pfnRegisterVariable("mat_writerrorfile", "0", 0);
+	mat_autocreate = gEngfuncs.pfnRegisterVariable("mat_autocreate", "0", 0);
 	cl_rollangle = CVAR_CREATE("cl_rollangle", "2.0", FCVAR_ARCHIVE);
 	cl_rollspeed = CVAR_CREATE("cl_rollspeed", "200", FCVAR_ARCHIVE);
 	cl_bobtilt = CVAR_CREATE("cl_bobtilt", "0", FCVAR_ARCHIVE);
