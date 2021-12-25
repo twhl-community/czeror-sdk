@@ -79,6 +79,8 @@ bool CTriggerChangeKeyValue::KeyValue(KeyValueData* pkvd)
 		UTIL_StripToken(pkvd->szValue, temp);
 		m_iValue[m_cTargets] = ALLOC_STRING(temp);
 
+		++m_cTargets;
+
 		return true;
 	}
 
